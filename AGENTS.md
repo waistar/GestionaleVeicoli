@@ -1,0 +1,70 @@
+﻿# AGENTS.md — MotoTracker (Motorbike Management System)
+
+## 1. Descrizione Architettura e Stack Tecnologico
+Applicazione web mobile-first installabile come **Progressive Web App (PWA)**, progettata per la gestione completa e il tracciamento della manutenzione di una o più moto da officina/garage.
+
+- **Framework**: Next.js 15+ (App Router, Server Components e Server Actions, TypeScript).
+- **Styling & UI**: Tailwind CSS v4, shadcn/ui (radix/base), Lucide React.
+- **Database & Storage**: Supabase (PostgreSQL relazionale per moto e interventi + Supabase Storage bucket `receipts` per ricevute e foto).
+- **PWA & Mobile**: Configurazione standalone con `manifest.json`, Web App meta tag iOS/Android e viewport anti-zoom per l'uso immediato da smartphone con guanti da garage.
+- **Validazione**: React Hook Form, Zod.
+- **Client Supabase**: `@supabase/ssr` e `@supabase/supabase-js`.
+
+---
+
+## 2. Struttura Cartelle Principale
+```
+motorbike-management-sys/
+├── app/
+│   ├── layout.tsx               # Root layout con meta tag PWA, viewport anti-zoom e font Geist
+│   ├── page.tsx                 # Dashboard principale (Km, Spesa totale, Alert scadenze, Ultimi interventi)
+│   ├── manifest.ts              # Web App Manifest dinamico per installazione PWA
+│   ├── actions/
+│   │   ├── bikes.ts             # Server Actions per moto e aggiornamento contachilometri
+│   │   └── maintenance.ts       # Server Actions per caricamento log, upload foto su bucket receipts, eliminazione
+│   ├── interventi/
+│   │   ├── page.tsx             # Storico interventi con ricerca e filtri per categoria
+│   │   └── nuovo/page.tsx       # Form touch-friendly registrazione intervento
+│   ├── promemoria/page.tsx      # Schermata Scadenze & Promemoria (Verde / Giallo / Rosso)
+│   └── api/schema-sql/route.ts  # Endpoint per copia rapida dello schema SQL
+├── components/
+│   ├── ui/                      # Componenti shadcn/ui (button, card, dialog, input, badge, textarea, select)
+│   ├── layout/                  # Header garage e BottomNav fissa mobile con safe-area iOS
+│   ├── dashboard/               # StatCards, AlertBanner e RecentInterventions
+│   ├── maintenance/             # MaintenanceForm, MaintenanceList e MaintenanceDetailDialog (foto zoomabile)
+│   ├── reminders/               # RemindersList con indicatori di stato visivi e progress bar
+│   └── setup/                   # Banner informativo configurazione Supabase
+├── lib/
+│   ├── supabase/
+│   │   ├── client.ts            # Client Supabase browser (createBrowserClient)
+│   │   ├── server.ts            # Client Supabase server-side (createServerClient)
+│   │   └── types.ts             # Interfacce TypeScript (Bike, MaintenanceLog, Categorie, Promemoria)
+│   ├── reminders.ts             # Calcolo logico delle scadenze, statistiche e formattazione valuta/km
+│   ├── demo-data.ts             # Dati fallback / demo per preview immediata
+│   └── utils.ts                 # Utility di classe (cn) per Tailwind
+├── public/
+│   ├── manifest.json            # Manifest statico PWA
+│   └── icons/                   # Icone PWA (icon.svg, 192x192, 512x512, apple-touch-icon)
+├── supabase/
+│   └── schema.sql               # Definizione DDL tabelle bikes, maintenance_logs, trigger km, bucket receipts e RLS
+├── .env.example                 # Template chiavi ambiente
+├── .env.local                   # Configurazione locale Supabase (URL e Anon Key)
+└── AGENTS.md                    # File di riferimento per agenti e manutenzione AI
+```
+
+---
+
+## 3. Comandi Essenziali da Terminale
+| Comando | Descrizione |
+|---|---|
+| `npm run dev` | Avvia il server di sviluppo Next.js locale (default http://localhost:3000) |
+| `npm run build` | Esegue il type check TypeScript e compila la build di produzione Next.js |
+| `npm run lint` | Esegue ESLint per verificare aderenza alle regole del codice |
+
+---
+
+## 4. Regole per gli Agenti AI
+Nelle sessioni future di manutenzione o estensione del codice, ogni agente DEVE seguire scrupolosamente queste tre regole:
+1. **Eseguire sempre `npm run build` prima di completare qualsiasi modifica**: verificare tassativamente che non vi siano errori di tipo TypeScript, di import o di compilazione Next.js.
+2. **Non modificare lo schema del database senza aggiornare `/supabase/schema.sql`**: qualsiasi nuova colonna, tabella o policy RLS deve essere riflessa immediatamente nello script SQL di riferimento.
+3. **Mantenere l'UI rigorosamente mobile-first**: progettare ogni elemento per l'utilizzo da smartphone in ambiente garage (pulsanti touch ampi, contrasto elevato, font minimo 16px per evitare zoom iOS, safe area padding per iPhone).
