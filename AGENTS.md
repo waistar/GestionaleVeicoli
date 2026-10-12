@@ -68,3 +68,13 @@ Nelle sessioni future di manutenzione o estensione del codice, ogni agente DEVE 
 1. **Eseguire sempre `npm run build` prima di completare qualsiasi modifica**: verificare tassativamente che non vi siano errori di tipo TypeScript, di import o di compilazione Next.js.
 2. **Non modificare lo schema del database senza aggiornare `/supabase/schema.sql`**: qualsiasi nuova colonna, tabella o policy RLS deve essere riflessa immediatamente nello script SQL di riferimento.
 3. **Mantenere l'UI rigorosamente mobile-first**: progettare ogni elemento per l'utilizzo da smartphone in ambiente garage (pulsanti touch ampi, contrasto elevato, font minimo 16px per evitare zoom iOS, safe area padding per iPhone).
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
