@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -54,44 +54,54 @@ export function RecentInterventions({ logs }: RecentInterventionsProps) {
           </Link>
         </div>
 
-        <div className="space-y-2.5">
+        <div className="space-y-2.5 sm:space-y-3">
           {recent.map((log) => (
             <Card
               key={log.id}
               onClick={() => setSelectedLog(log)}
-              className="bg-zinc-900/80 border-zinc-800 p-3.5 rounded-2xl hover:border-zinc-700 transition-all cursor-pointer active:scale-98 shadow-sm flex items-center justify-between gap-3"
+              className="bg-zinc-900/80 border-zinc-800 p-3.5 sm:p-4 rounded-2xl hover:border-zinc-700 hover:bg-zinc-850/60 transition-all cursor-pointer active:scale-98 shadow-sm flex items-center justify-between gap-3 group"
             >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="outline" className="bg-zinc-800 border-zinc-700 text-orange-400 text-[10px] font-semibold px-2 py-0.5">
-                    {log.category}
-                  </Badge>
-                  <span className="text-[11px] font-mono text-zinc-400 flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-zinc-500" />
-                    {new Date(log.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
-                  </span>
-                </div>
+              <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                {log.image_url ? (
+                  <div className="hidden sm:block w-13 h-13 rounded-xl overflow-hidden shrink-0 border border-zinc-800 bg-zinc-950">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={log.image_url}
+                      alt={log.category}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                  </div>
+                ) : null}
 
-                <p className="text-xs font-medium text-zinc-200 line-clamp-1">
-                  {log.description}
-                </p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge variant="outline" className="bg-zinc-800 border-zinc-700 text-orange-400 text-[10px] font-semibold px-2 py-0.5">
+                      {log.category}
+                    </Badge>
+                    <span className="text-[11px] sm:text-xs font-mono text-zinc-400 flex items-center gap-1">
+                      <Calendar className="w-3 h-3 text-zinc-500" />
+                      {new Date(log.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
 
-                <div className="flex items-center gap-3 mt-1.5 text-[11px] text-zinc-400 font-mono">
-                  <span>{formatKm(log.km_hours)}</span>
-                  <span>•</span>
-                  <span className="font-semibold text-emerald-400">{formatCurrency(log.cost)}</span>
-                  {log.image_url && (
-                    <>
-                      <span>•</span>
-                      <span className="text-orange-400 flex items-center gap-0.5">
-                        <ImageIcon className="w-3 h-3" /> Foto
+                  <p className="text-xs sm:text-sm font-medium text-zinc-200 line-clamp-1 group-hover:text-white transition-colors">
+                    {log.description}
+                  </p>
+
+                  <div className="flex items-center gap-3 mt-1.5 text-[11px] sm:text-xs text-zinc-400 font-mono">
+                    <span>{formatKm(log.km_hours)}</span>
+                    <span>•</span>
+                    <span className="font-semibold text-emerald-400">{formatCurrency(log.cost)}</span>
+                    {log.image_url && (
+                      <span className="sm:hidden text-orange-400 flex items-center gap-0.5">
+                        • <ImageIcon className="w-3 h-3" /> Foto
                       </span>
-                    </>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <ChevronRight className="w-4 h-4 text-zinc-500 shrink-0" />
+              <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all shrink-0" />
             </Card>
           ))}
         </div>

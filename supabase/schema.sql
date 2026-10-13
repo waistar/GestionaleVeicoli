@@ -1,4 +1,4 @@
-﻿-- ==============================================================================
+-- ==============================================================================
 -- MOTORBIKE MANAGEMENT SYSTEM - SUPABASE SCHEMA & STORAGE
 -- ==============================================================================
 
@@ -12,8 +12,18 @@ CREATE TABLE IF NOT EXISTS public.bikes (
     model TEXT NOT NULL,
     year INTEGER,
     current_km_hours NUMERIC NOT NULL DEFAULT 0,
+    image_url TEXT,
+    category TEXT NOT NULL DEFAULT 'naked',
+    primary_color TEXT NOT NULL DEFAULT '#f97316',
+    accent_color TEXT NOT NULL DEFAULT '#18181b',
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
+
+-- Migration support for existing databases
+ALTER TABLE public.bikes ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE public.bikes ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'naked';
+ALTER TABLE public.bikes ADD COLUMN IF NOT EXISTS primary_color TEXT NOT NULL DEFAULT '#f97316';
+ALTER TABLE public.bikes ADD COLUMN IF NOT EXISTS accent_color TEXT NOT NULL DEFAULT '#18181b';
 
 -- Index for bikes
 CREATE INDEX IF NOT EXISTS idx_bikes_created_at ON public.bikes(created_at DESC);
@@ -111,8 +121,8 @@ DECLARE
     default_bike_id UUID;
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM public.bikes LIMIT 1) THEN
-        INSERT INTO public.bikes (id, name, model, year, current_km_hours)
-        VALUES (gen_random_uuid(), 'Yamaha MT-07', 'MT-07 Pure', 2022, 14500)
+        INSERT INTO public.bikes (id, name, model, year, current_km_hours, category, primary_color, accent_color)
+        VALUES (gen_random_uuid(), 'Yamaha MT-07', 'MT-07 Pure', 2022, 14500, 'naked', '#0284c7', '#0f172a')
         RETURNING id INTO default_bike_id;
 
         INSERT INTO public.maintenance_logs (bike_id, date, km_hours, category, description, cost, next_due_km_hours)

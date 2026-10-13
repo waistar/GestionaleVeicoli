@@ -1,4 +1,4 @@
-﻿import type { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -54,7 +54,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-full bg-zinc-950 text-zinc-100 antialiased font-sans flex flex-col selection:bg-orange-500 selection:text-white pb-20`}
+        className={`${geistSans.variable} ${geistMono.variable} min-h-full bg-zinc-950 text-zinc-100 antialiased font-sans flex flex-col selection:bg-orange-500 selection:text-white pb-20 md:pb-8`}
       >
         {children}
       </body>

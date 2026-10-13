@@ -1,55 +1,49 @@
-﻿'use server'
+'use server'
 
 import { createClient } from '@/lib/supabase/server';
 import { Bike, MaintenanceLog } from '@/lib/supabase/types';
 import { FALLBACK_BIKE, FALLBACK_LOGS } from '@/lib/demo-data';
 import { revalidatePath } from 'next/cache';
 
-export async function getMainData(): Promise<{
+import { getActiveBike } from '@/app/actions/bikes';
+
+export async function getMainData(preferredBikeId?: string): Promise<{
   bike: Bike;
   logs: MaintenanceLog[];
   isFallback: boolean;
   error?: string;
 }> {
   try {
-    const supabase = await createClient();
+    const { bike, isFallback: bikeFallback, error: bikeError } = await getActiveBike(preferredBikeId);
 
-    // 1. Fetch active bike
-    const { data: bikes, error: bikeError } = await supabase
-      .from('bikes')
-      .select('*')
-      .order('created_at', { ascending: true })
-      .limit(1);
-
-    if (bikeError || !bikes || bikes.length === 0) {
+    if (bikeFallback) {
+      const filteredLogs = FALLBACK_LOGS.filter((l) => l.bike_id === bike.id);
       return {
-        bike: FALLBACK_BIKE,
-        logs: FALLBACK_LOGS,
+        bike,
+        logs: filteredLogs.length > 0 ? filteredLogs : FALLBACK_LOGS,
         isFallback: true,
-        error: bikeError?.message || 'Nessuna moto configurata',
+        error: bikeError,
       };
     }
 
-    const activeBike = bikes[0] as Bike;
-
-    // 2. Fetch maintenance logs
+    const supabase = await createClient();
     const { data: logs, error: logsError } = await supabase
       .from('maintenance_logs')
       .select('*')
-      .eq('bike_id', activeBike.id)
+      .eq('bike_id', bike.id)
       .order('date', { ascending: false });
 
     if (logsError) {
       return {
-        bike: activeBike,
-        logs: FALLBACK_LOGS,
-        isFallback: true,
+        bike,
+        logs: [],
+        isFallback: false,
         error: logsError.message,
       };
     }
 
     return {
-      bike: activeBike,
+      bike,
       logs: (logs || []) as MaintenanceLog[],
       isFallback: false,
     };
@@ -166,6 +160,7 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
     }
 
     revalidatePath('/');
+    revalidatePath('/garage');
     revalidatePath('/interventi');
     revalidatePath('/promemoria');
 
@@ -189,6 +184,7 @@ export async function deleteMaintenanceLog(id: string): Promise<{ success: boole
     }
 
     revalidatePath('/');
+    revalidatePath('/garage');
     revalidatePath('/interventi');
     revalidatePath('/promemoria');
     return { success: true };

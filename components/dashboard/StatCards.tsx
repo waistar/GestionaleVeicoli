@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
@@ -39,54 +39,60 @@ export function StatCards({ bike, totalCost, totalInterventions }: StatCardsProp
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:gap-5">
         {/* Chilometraggio Attuale */}
         <Card 
           onClick={() => setIsEditOpen(true)}
-          className="bg-zinc-900/90 border-zinc-800 p-3 flex flex-col justify-between relative cursor-pointer active:scale-98 transition-transform hover:border-zinc-700 shadow-md"
+          className="bg-zinc-900/90 border-zinc-800 p-3 sm:p-4 md:p-5 flex flex-col justify-between relative cursor-pointer active:scale-98 transition-all hover:border-zinc-700 hover:bg-zinc-850/80 shadow-md group rounded-2xl"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Km Attuali</span>
-            <Gauge className="w-3.5 h-3.5 text-orange-400" />
+            <span className="text-[11px] sm:text-xs font-semibold text-zinc-400 uppercase tracking-wider">Km Attuali</span>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-400 group-hover:scale-110 transition-transform">
+              <Gauge className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
           </div>
-          <div className="mt-2">
-            <span className="text-lg font-bold font-mono text-zinc-100 tracking-tight block">
+          <div className="mt-2 sm:mt-3">
+            <span className="text-lg sm:text-2xl lg:text-3xl font-bold font-mono text-zinc-100 tracking-tight block">
               {new Intl.NumberFormat('it-IT').format(Math.round(bike.current_km_hours))}
             </span>
-            <span className="text-[10px] text-orange-400 flex items-center gap-1 mt-0.5">
-              <Edit3 className="w-2.5 h-2.5" /> Modifica
+            <span className="text-[10px] sm:text-xs text-orange-400 flex items-center gap-1 mt-0.5 sm:mt-1 font-medium">
+              <Edit3 className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Modifica lettura
             </span>
           </div>
         </Card>
 
         {/* Spesa Totale */}
-        <Card className="bg-zinc-900/90 border-zinc-800 p-3 flex flex-col justify-between shadow-md">
+        <Card className="bg-zinc-900/90 border-zinc-800 p-3 sm:p-4 md:p-5 flex flex-col justify-between shadow-md rounded-2xl hover:border-zinc-700 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Spesa Tot.</span>
-            <CircleDollarSign className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-[11px] sm:text-xs font-semibold text-zinc-400 uppercase tracking-wider">Spesa Tot.</span>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+              <CircleDollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
           </div>
-          <div className="mt-2">
-            <span className="text-lg font-bold font-mono text-zinc-100 tracking-tight block truncate">
+          <div className="mt-2 sm:mt-3">
+            <span className="text-lg sm:text-2xl lg:text-3xl font-bold font-mono text-emerald-400 tracking-tight block truncate">
               {formatCurrency(totalCost)}
             </span>
-            <span className="text-[10px] text-zinc-400 block mt-0.5">
-              Cumulativa
+            <span className="text-[10px] sm:text-xs text-zinc-400 block mt-0.5 sm:mt-1">
+              Spesa cumulativa
             </span>
           </div>
         </Card>
 
         {/* Interventi Totali */}
-        <Card className="bg-zinc-900/90 border-zinc-800 p-3 flex flex-col justify-between shadow-md">
+        <Card className="bg-zinc-900/90 border-zinc-800 p-3 sm:p-4 md:p-5 flex flex-col justify-between shadow-md rounded-2xl hover:border-zinc-700 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Lavori</span>
-            <Wrench className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-[11px] sm:text-xs font-semibold text-zinc-400 uppercase tracking-wider">Lavori</span>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
+              <Wrench className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
           </div>
-          <div className="mt-2">
-            <span className="text-lg font-bold font-mono text-zinc-100 tracking-tight block">
+          <div className="mt-2 sm:mt-3">
+            <span className="text-lg sm:text-2xl lg:text-3xl font-bold font-mono text-zinc-100 tracking-tight block">
               {totalInterventions}
             </span>
-            <span className="text-[10px] text-zinc-400 block mt-0.5">
-              Registrati
+            <span className="text-[10px] sm:text-xs text-zinc-400 block mt-0.5 sm:mt-1">
+              Manutenzioni svolte
             </span>
           </div>
         </Card>
@@ -94,7 +100,7 @@ export function StatCards({ bike, totalCost, totalInterventions }: StatCardsProp
 
       {/* Dialog aggiornamento Chilometri / Ore */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100 max-w-sm rounded-2xl">
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100 max-w-sm sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-zinc-100">
               <Gauge className="w-5 h-5 text-orange-400" />

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React from 'react';
 import Link from 'next/link';
@@ -70,21 +70,21 @@ export function AlertBanner({ reminders }: AlertBannerProps) {
         </Link>
       </div>
 
-      <div className="space-y-2 mt-2">
-        {mainAlerts.slice(0, 2).map((item) => {
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+        {mainAlerts.slice(0, 4).map((item) => {
           const isOverdue = item.kmRemaining <= 0;
           return (
             <div
               key={item.id}
-              className="flex items-center justify-between bg-zinc-950/70 rounded-xl p-2.5 border border-zinc-800/80"
+              className="flex items-center justify-between bg-zinc-950/70 rounded-xl p-2.5 sm:p-3 border border-zinc-800/80 gap-2"
             >
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-zinc-100">{item.category}</span>
-                <span className="text-[10px] text-zinc-400 font-mono">
-                  (Target: {formatKm(item.nextDueKm)})
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs font-bold text-zinc-100 truncate">{item.category}</span>
+                <span className="text-[10px] text-zinc-400 font-mono shrink-0">
+                  ({formatKm(item.nextDueKm)})
                 </span>
               </div>
-              <div>
+              <div className="shrink-0">
                 {isOverdue ? (
                   <span className="text-xs font-bold font-mono text-rose-400 px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20">
                     Scaduto da {formatKm(Math.abs(item.kmRemaining))}

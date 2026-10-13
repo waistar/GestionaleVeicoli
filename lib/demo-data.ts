@@ -1,4 +1,4 @@
-﻿import { Bike, MaintenanceLog } from './supabase/types';
+import { Bike, MaintenanceLog } from './supabase/types';
 
 export const FALLBACK_BIKE: Bike = {
   id: 'b1a2c3d4-0000-0000-0000-000000000001',
@@ -6,8 +6,40 @@ export const FALLBACK_BIKE: Bike = {
   model: 'MT-07 Pure',
   year: 2022,
   current_km_hours: 14500,
-  created_at: new Date().toISOString()
+  created_at: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(),
+  category: 'naked',
+  primary_color: '#0284c7', // Yamaha Racing Blue
+  accent_color: '#0f172a',
+  image_url: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=80',
 };
+
+export const FALLBACK_GARAGE_BIKES: Bike[] = [
+  FALLBACK_BIKE,
+  {
+    id: 'b1a2c3d4-0000-0000-0000-000000000002',
+    name: 'Ducati Monster',
+    model: 'Monster 937 SP',
+    year: 2023,
+    current_km_hours: 6800,
+    created_at: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+    category: 'naked',
+    primary_color: '#dc2626', // Ducati Rosso
+    accent_color: '#171717',
+    image_url: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    id: 'b1a2c3d4-0000-0000-0000-000000000003',
+    name: 'BMW R 1250 GS',
+    model: 'GS Adventure Rallye',
+    year: 2021,
+    current_km_hours: 28400,
+    created_at: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
+    category: 'adventure',
+    primary_color: '#2563eb', // Trophy Blue
+    accent_color: '#f8fafc',
+    image_url: 'https://images.unsplash.com/photo-1609630875171-b1321377ee65?auto=format&fit=crop&w=800&q=80',
+  },
+];
 
 export const FALLBACK_LOGS: MaintenanceLog[] = [
   {
