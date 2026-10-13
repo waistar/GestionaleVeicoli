@@ -353,7 +353,7 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
             <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
               4. Tipologia & Sagoma 3D
             </Label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {BIKE_CATEGORIES.map((cat) => {
                 const isSelected = category === cat.value;
                 return (
@@ -368,7 +368,7 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold">{cat.label.split('/')[0]}</span>
+                      <span className="text-xs font-bold">{cat.label.split('/')[0].trim()}</span>
                       {isSelected && <Check className="w-3.5 h-3.5 text-orange-400" />}
                     </div>
                     <span className="text-[10px] text-zinc-500 block truncate mt-0.5">

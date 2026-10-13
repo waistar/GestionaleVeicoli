@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public.bikes (
     year INTEGER,
     current_km_hours NUMERIC NOT NULL DEFAULT 0,
     image_url TEXT,
-    category TEXT NOT NULL DEFAULT 'naked',
+    category TEXT NOT NULL DEFAULT 'naked', -- Valori supportati: 'naked', 'sport', 'adventure', 'enduro', 'cross', 'cruiser', 'scooter'
     primary_color TEXT NOT NULL DEFAULT '#f97316',
     accent_color TEXT NOT NULL DEFAULT '#18181b',
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS public.bikes (
 
 -- Migration support for existing databases
 ALTER TABLE public.bikes ADD COLUMN IF NOT EXISTS image_url TEXT;
-ALTER TABLE public.bikes ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'naked';
+ALTER TABLE public.bikes ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'naked'; -- 'naked', 'sport', 'adventure', 'enduro', 'cross', 'cruiser', 'scooter'
 ALTER TABLE public.bikes ADD COLUMN IF NOT EXISTS primary_color TEXT NOT NULL DEFAULT '#f97316';
 ALTER TABLE public.bikes ADD COLUMN IF NOT EXISTS accent_color TEXT NOT NULL DEFAULT '#18181b';
 

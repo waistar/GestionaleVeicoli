@@ -238,9 +238,15 @@ export function Motorcycle3DViewer({
     let forkLength = 1.35;
     let groundOffset = 0;
 
+    const isDirtBike = category === 'cross' || category === 'enduro';
+
     if (category === 'adventure') {
       forkLength = 1.55;
       groundOffset = 0.15;
+    } else if (isDirtBike) {
+      forkLength = 1.60;
+      forkAngle = 0.35;
+      groundOffset = 0.20;
     } else if (category === 'cruiser') {
       forkAngle = 0.52; // Raked out
       forkLength = 1.45;
@@ -252,7 +258,7 @@ export function Motorcycle3DViewer({
     rearWheelGroup.name = 'Ruota & Trasmissione';
     rearWheelGroup.position.set(-1.1, -0.45 + groundOffset, 0);
 
-    const rearTireGeo = new THREE.TorusGeometry(0.48, 0.15, 16, 32);
+    const rearTireGeo = new THREE.TorusGeometry(0.48, isDirtBike ? 0.16 : 0.15, 16, 32);
     const rearTire = new THREE.Mesh(rearTireGeo, rubberMat);
     rearWheelGroup.add(rearTire);
 
@@ -272,10 +278,10 @@ export function Motorcycle3DViewer({
     // --- FRONT WHEEL ---
     const frontWheelGroup = new THREE.Group();
     frontWheelGroup.name = 'Ruota & Freni Anteriori';
-    const frontWheelX = category === 'cruiser' ? 1.35 : 1.15;
+    const frontWheelX = category === 'cruiser' ? 1.35 : (isDirtBike ? 1.20 : 1.15);
     frontWheelGroup.position.set(frontWheelX, -0.45 + groundOffset, 0);
 
-    const frontTireGeo = new THREE.TorusGeometry(0.48, 0.13, 16, 32);
+    const frontTireGeo = new THREE.TorusGeometry(isDirtBike ? 0.51 : 0.48, isDirtBike ? 0.11 : 0.13, 16, 32);
     const frontTire = new THREE.Mesh(frontTireGeo, rubberMat);
     frontWheelGroup.add(frontTire);
 
@@ -337,17 +343,19 @@ export function Motorcycle3DViewer({
     const mufflerGeo = new THREE.CylinderGeometry(0.08, 0.11, 0.75, 16);
     mufflerGeo.rotateZ(Math.PI / 2);
     const muffler = new THREE.Mesh(mufflerGeo, chromeMat);
-    muffler.position.set(-0.7, -0.1, 0.26);
+    const mufflerY = isDirtBike ? 0.22 : -0.1;
+    const mufflerZ = isDirtBike ? 0.20 : 0.26;
+    muffler.position.set(-0.7, mufflerY, mufflerZ);
     muffler.rotation.y = 0.08;
-    muffler.rotation.z = 0.25;
+    muffler.rotation.z = isDirtBike ? 0.10 : 0.25;
     engineGroup.add(muffler);
 
     // Carbon tip
     const tipGeo = new THREE.CylinderGeometry(0.07, 0.08, 0.12, 16);
     tipGeo.rotateZ(Math.PI / 2);
     const tip = new THREE.Mesh(tipGeo, frameMat);
-    tip.position.set(-1.08, 0.0, 0.26);
-    tip.rotation.z = 0.25;
+    tip.position.set(-1.08, mufflerY + 0.10, mufflerZ);
+    tip.rotation.z = isDirtBike ? 0.10 : 0.25;
     engineGroup.add(tip);
 
     bikeGroup.add(engineGroup);
@@ -380,6 +388,8 @@ export function Motorcycle3DViewer({
     } else if (category === 'cruiser') {
       tankGeo = new THREE.ConeGeometry(0.28, 0.9, 16);
       tankGeo.rotateZ(Math.PI / 2);
+    } else if (isDirtBike) {
+      tankGeo = new THREE.BoxGeometry(0.58, 0.30, 0.28);
     } else {
       tankGeo = new THREE.BoxGeometry(0.75, 0.38, 0.42);
     }
@@ -451,6 +461,28 @@ export function Motorcycle3DViewer({
       const beak = new THREE.Mesh(beakGeo, bodyPaintMat);
       beak.position.set(0.95, 0.25 + groundOffset, 0);
       bodyworkGroup.add(beak);
+    } else if (isDirtBike) {
+      // High off-road front mudguard (Parafango alto da fuoristrada)
+      const highFenderGeo = new THREE.ConeGeometry(0.11, 0.68, 12);
+      highFenderGeo.rotateZ(-Math.PI / 2);
+      const highFender = new THREE.Mesh(highFenderGeo, bodyPaintMat);
+      highFender.position.set(frontWheelX - 0.20, 0.32 + groundOffset, 0);
+      highFender.rotation.z = -0.15;
+      bodyworkGroup.add(highFender);
+
+      // Radiator side shrouds (convogliatori serbatoio)
+      const shroudGeo = new THREE.BoxGeometry(0.36, 0.26, 0.04);
+      const shroudLeft = new THREE.Mesh(shroudGeo, bodyPaintMat);
+      shroudLeft.position.set(0.38, 0.28 + groundOffset, 0.16);
+      shroudLeft.rotation.y = 0.22;
+      shroudLeft.rotation.z = -0.22;
+      bodyworkGroup.add(shroudLeft);
+
+      const shroudRight = new THREE.Mesh(shroudGeo, bodyPaintMat);
+      shroudRight.position.set(0.38, 0.28 + groundOffset, -0.16);
+      shroudRight.rotation.y = -0.22;
+      shroudRight.rotation.z = -0.22;
+      bodyworkGroup.add(shroudRight);
     } else if (category === 'scooter') {
       // Step-through front apron
       const apronGeo = new THREE.BoxGeometry(0.3, 0.75, 0.46);
@@ -461,26 +493,43 @@ export function Motorcycle3DViewer({
     }
 
     // Seat
-    const seatGeo = new THREE.BoxGeometry(0.65, 0.12, 0.3);
+    let seatGeo: THREE.BufferGeometry;
+    let seatY = 0.36 + groundOffset;
+    let seatX = -0.35;
+    let seatRotZ = 0.12;
+
+    if (isDirtBike) {
+      seatGeo = new THREE.BoxGeometry(0.85, 0.09, 0.22);
+      seatX = -0.18;
+      seatY = 0.35 + groundOffset;
+      seatRotZ = 0.04;
+    } else {
+      seatGeo = new THREE.BoxGeometry(0.65, 0.12, 0.3);
+    }
+
     const seatMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.95 });
     const seat = new THREE.Mesh(seatGeo, seatMat);
-    seat.position.set(-0.35, 0.36 + groundOffset, 0);
-    seat.rotation.z = 0.12;
+    seat.position.set(seatX, seatY, 0);
+    seat.rotation.z = seatRotZ;
     bodyworkGroup.add(seat);
 
     // Tail cowl
-    const tailGeo = new THREE.ConeGeometry(0.16, 0.55, 16);
+    const tailGeo = isDirtBike
+      ? new THREE.ConeGeometry(0.11, 0.68, 12)
+      : new THREE.ConeGeometry(0.16, 0.55, 16);
     tailGeo.rotateZ(Math.PI / 2);
     const tail = new THREE.Mesh(tailGeo, bodyPaintMat);
     tail.position.set(-0.85, 0.44 + groundOffset, 0);
-    tail.rotation.z = 0.2;
+    tail.rotation.z = isDirtBike ? 0.26 : 0.2;
     bodyworkGroup.add(tail);
 
-    // Tail light
-    const tailLightGeo = new THREE.BoxGeometry(0.04, 0.08, 0.14);
-    const tailLight = new THREE.Mesh(tailLightGeo, emissiveTailMat);
-    tailLight.position.set(-1.12, 0.48 + groundOffset, 0);
-    bodyworkGroup.add(tailLight);
+    // Tail light (Enduro has it, Motocross cross bike does not)
+    if (category !== 'cross') {
+      const tailLightGeo = new THREE.BoxGeometry(0.04, 0.08, 0.14);
+      const tailLight = new THREE.Mesh(tailLightGeo, emissiveTailMat);
+      tailLight.position.set(-1.12, 0.48 + groundOffset, 0);
+      bodyworkGroup.add(tailLight);
+    }
 
     bikeGroup.add(bodyworkGroup);
 
@@ -490,7 +539,7 @@ export function Motorcycle3DViewer({
 
     const forkStanchionGeo = new THREE.CylinderGeometry(0.035, 0.035, forkLength, 16);
     const forkMat = new THREE.MeshStandardMaterial({
-      color: category === 'adventure' ? 0xd97706 : 0x71717a,
+      color: (category === 'adventure' || isDirtBike) ? 0xd97706 : 0x71717a,
       metalness: 0.9,
       roughness: 0.15,
     });
@@ -513,11 +562,21 @@ export function Motorcycle3DViewer({
     forkGroup.add(clamp);
 
     // Handlebar
-    const barGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.72, 12);
+    const barGeo = new THREE.CylinderGeometry(0.022, 0.022, isDirtBike ? 0.82 : 0.72, 12);
     barGeo.rotateX(Math.PI / 2);
     const bar = new THREE.Mesh(barGeo, frameMat);
     bar.position.set(frontWheelX - 0.42, 0.72 + groundOffset, 0);
     forkGroup.add(bar);
+
+    if (isDirtBike) {
+      // Protective crossbar pad
+      const padGeo = new THREE.CylinderGeometry(0.038, 0.038, 0.28, 12);
+      padGeo.rotateX(Math.PI / 2);
+      const padMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.9 });
+      const pad = new THREE.Mesh(padGeo, padMat);
+      pad.position.set(frontWheelX - 0.42, 0.77 + groundOffset, 0);
+      forkGroup.add(pad);
+    }
 
     // TFT Dashboard screen
     const dashGeo = new THREE.BoxGeometry(0.08, 0.06, 0.12);
@@ -526,11 +585,22 @@ export function Motorcycle3DViewer({
     dash.rotation.z = 0.35;
     forkGroup.add(dash);
 
-    // Headlight projector
-    const headlightGeo = new THREE.SphereGeometry(0.12, 16, 16);
-    const headlight = new THREE.Mesh(headlightGeo, emissiveHeadlightMat);
-    headlight.position.set(frontWheelX - 0.22, 0.55 + groundOffset, 0);
-    forkGroup.add(headlight);
+    // Front Light or Race Number Plate
+    if (category === 'cross') {
+      // Front race number plate (Tabella portanumero frontale cross)
+      const plateGeo = new THREE.BoxGeometry(0.03, 0.28, 0.25);
+      const plateMat = new THREE.MeshStandardMaterial({ color: 0xf4f4f5, roughness: 0.3 });
+      const plate = new THREE.Mesh(plateGeo, plateMat);
+      plate.position.set(frontWheelX - 0.24, 0.58 + groundOffset, 0);
+      plate.rotation.z = -forkAngle;
+      forkGroup.add(plate);
+    } else {
+      // Headlight projector
+      const headlightGeo = new THREE.SphereGeometry(0.12, 16, 16);
+      const headlight = new THREE.Mesh(headlightGeo, emissiveHeadlightMat);
+      headlight.position.set(frontWheelX - 0.22, 0.55 + groundOffset, 0);
+      forkGroup.add(headlight);
+    }
 
     bikeGroup.add(forkGroup);
 

@@ -327,7 +327,7 @@ export function EditBikeModal({ bike, open, onOpenChange, onBikeUpdated }: EditB
             <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
               Sagoma / Categoria 3D
             </Label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {BIKE_CATEGORIES.map((cat) => {
                 const isSelected = category === cat.value;
                 return (
@@ -337,14 +337,17 @@ export function EditBikeModal({ bike, open, onOpenChange, onBikeUpdated }: EditB
                     onClick={() => setCategory(cat.value)}
                     className={`p-2.5 rounded-xl border text-left transition-all ${
                       isSelected
-                        ? 'bg-orange-500/15 border-orange-500 text-white'
+                        ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10'
                         : 'bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold">{cat.label.split('/')[0]}</span>
+                      <span className="text-xs font-bold">{cat.label.split('/')[0].trim()}</span>
                       {isSelected && <Check className="w-3.5 h-3.5 text-orange-400" />}
                     </div>
+                    <span className="text-[10px] text-zinc-500 block truncate mt-0.5">
+                      {cat.description}
+                    </span>
                   </button>
                 );
               })}

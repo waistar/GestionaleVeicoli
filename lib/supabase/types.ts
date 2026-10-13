@@ -17,7 +17,14 @@ export const MAINTENANCE_CATEGORIES: MaintenanceCategory[] = [
   'Varie'
 ];
 
-export type BikeCategory = 'naked' | 'sport' | 'adventure' | 'cruiser' | 'scooter';
+export type BikeCategory = 
+  | 'naked' 
+  | 'sport' 
+  | 'adventure' 
+  | 'enduro' 
+  | 'cross' 
+  | 'cruiser' 
+  | 'scooter';
 
 export interface BikeCategoryOption {
   value: BikeCategory;
@@ -28,7 +35,9 @@ export interface BikeCategoryOption {
 export const BIKE_CATEGORIES: BikeCategoryOption[] = [
   { value: 'naked', label: 'Naked / Roadster', description: 'Telaio a vista, manubrio dritto, assetto agile' },
   { value: 'sport', label: 'Sportiva / Supersport', description: 'Carenatura aerodinamica, semimanubri bassi' },
-  { value: 'adventure', label: 'Adventure / Enduro', description: 'Assetto rialzato, cupolino protettivo' },
+  { value: 'adventure', label: 'Adventure / Maxi-Enduro', description: 'Assetto rialzato, cupolino e serbatoio capiente' },
+  { value: 'enduro', label: 'Enduro / Dual-Sport', description: 'Tassellata specialistica con fari ed escursione lunga' },
+  { value: 'cross', label: 'Cross / Motocross', description: 'Gare e pista, tabella portanumero, peso piuma' },
   { value: 'cruiser', label: 'Custom / Cruiser', description: 'Interasse lungo, manubrio aperto, sella ribassata' },
   { value: 'scooter', label: 'Maxi Scooter / Urban', description: 'Pedana sagomata, scudo frontale ampio' },
 ];

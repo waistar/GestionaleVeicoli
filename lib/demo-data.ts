@@ -39,6 +39,30 @@ export const FALLBACK_GARAGE_BIKES: Bike[] = [
     accent_color: '#f8fafc',
     image_url: 'https://images.unsplash.com/photo-1609630875171-b1321377ee65?auto=format&fit=crop&w=800&q=80',
   },
+  {
+    id: 'b1a2c3d4-0000-0000-0000-000000000004',
+    name: 'KTM 300 EXC',
+    model: 'EXC TPI Six Days',
+    year: 2023,
+    current_km_hours: 3200,
+    created_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+    category: 'enduro',
+    primary_color: '#ea580c', // KTM Orange
+    accent_color: '#18181b',
+    image_url: null,
+  },
+  {
+    id: 'b1a2c3d4-0000-0000-0000-000000000005',
+    name: 'Honda CRF 450R',
+    model: 'CRF 450R Special',
+    year: 2024,
+    current_km_hours: 48,
+    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+    category: 'cross',
+    primary_color: '#dc2626', // Honda Red
+    accent_color: '#ffffff',
+    image_url: null,
+  },
 ];
 
 export const FALLBACK_LOGS: MaintenanceLog[] = [
