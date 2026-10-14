@@ -5,6 +5,7 @@ function brandFor(vehicle: Bike) {
   const value = `${vehicle.name} ${vehicle.model}`.toLocaleLowerCase('it-IT');
   if (/\baudi\b/.test(value)) return 'audi';
   if (/\bfiat\b/.test(value) || /\bpanda\b/.test(value)) return 'fiat';
+  if (/\bhonda\b/.test(value)) return 'honda';
   return null;
 }
 
@@ -25,6 +26,16 @@ export function VehicleBrandLogo({ vehicle }: { vehicle: Bike }) {
         <circle cx="32" cy="32" r="29" fill="#9d1720" stroke="#b9bcc1" strokeWidth="3" />
         <circle cx="32" cy="32" r="24" fill="none" stroke="#d7d9dc" strokeWidth="1.5" />
         <text x="32" y="38" textAnchor="middle" fill="white" fontSize="18" fontWeight="800" fontFamily="Arial, sans-serif" letterSpacing="1">FIAT</text>
+      </svg>
+    </div>;
+  }
+
+  if (brand === 'honda') {
+    return <div aria-label="Honda" role="img" className="w-14 h-14 rounded-xl border border-zinc-200 bg-white flex items-center justify-center shrink-0 shadow-sm">
+      <svg viewBox="0 0 72 64" className="w-12 h-11" aria-hidden="true">
+        <rect x="12" y="6" width="48" height="38" rx="9" fill="none" stroke="#cc0000" strokeWidth="3" />
+        <path d="M21 13c1 9 2 17 4 24h7V27h8v10h7c2-7 3-15 4-24h-7l-2 10H30l-2-10Z" fill="#cc0000" />
+        <text x="36" y="57" textAnchor="middle" fill="#cc0000" fontSize="11" fontWeight="800" fontFamily="Arial, sans-serif" letterSpacing="1.5">HONDA</text>
       </svg>
     </div>;
   }
