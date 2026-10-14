@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { VEHICLE_TYPES, type VehicleType } from '@/lib/vehicle-catalog';
+import { INITIAL_DEADLINE_FIELDS } from '@/lib/initial-deadlines';
 import { Bike } from '@/lib/supabase/types';
 import { extractDominantColor } from '@/lib/image-colors';
 import { createBike } from '@/app/actions/bikes';
@@ -24,6 +25,7 @@ import {
   Loader2,
   Palette,
   AlertCircle,
+  CalendarClock,
   X,
 } from 'lucide-react';
 
@@ -97,7 +99,7 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
     setExtractedPalette([]);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -113,15 +115,16 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
     setIsSubmitting(true);
 
     try {
-      const formData = new FormData();
-      formData.append('vehicle_type', vehicleTypeValue);
-      formData.append('plate', plate.trim());
-      formData.append('name', name.trim());
-      formData.append('model', model.trim());
+      const formElement = e.currentTarget;
+      const formData = new FormData(formElement);
+      formData.set('vehicle_type', vehicleTypeValue);
+      formData.set('plate', plate.trim());
+      formData.set('name', name.trim());
+      formData.set('model', model.trim());
       if (year.trim()) formData.append('year', year.trim());
-      formData.append('current_km_hours', kmHours.trim() || '0');
-      formData.append('primary_color', primaryColor);
-      formData.append('accent_color', accentColor);
+      formData.set('current_km_hours', kmHours.trim() || '0');
+      formData.set('primary_color', primaryColor);
+      formData.set('accent_color', accentColor);
 
       if (selectedFile) {
         formData.append('image', selectedFile);
@@ -137,6 +140,7 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
 
       // Success
       if (onBikeCreated) onBikeCreated(res.bike);
+      formElement.reset();
       onOpenChange(false);
       resetForm();
     } catch (err: unknown) {
@@ -173,7 +177,7 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
               Aggiungi un veicolo
             </DialogTitle>
             <DialogDescription className="text-zinc-600 text-xs mt-1">
-              Inserisci i dati del veicolo e una foto per aggiornare il parco veicoli.
+              Registra il veicolo e configura subito le sue scadenze principali.
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -362,12 +366,53 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
             </div>
           </div>
 
+          {/* SECTION 4: INITIAL DEADLINES */}
+          <section className="space-y-4 rounded-2xl border border-orange-200 bg-orange-50/50 p-4">
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-800 flex items-center gap-1.5">
+                <CalendarClock className="w-4 h-4 text-orange-700" />
+                4. Scadenze del veicolo
+              </Label>
+              <p className="mt-1 text-xs text-zinc-600">Inserisci le date effettive riportate sui documenti. I campi non ancora noti possono restare vuoti.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {INITIAL_DEADLINE_FIELDS.filter(field => 'primary' in field && field.primary).map(field => (
+                <div key={field.key} className="rounded-xl border border-zinc-200 bg-white p-3">
+                  <label className="text-xs font-semibold text-zinc-800" htmlFor={`${field.key}-date`}>{field.label}</label>
+                  <p className="text-[11px] text-zinc-500 mb-2">{field.hint}</p>
+                  <div className={'grid gap-2 ' + ('supportsKm' in field && field.supportsKm ? 'grid-cols-2' : 'grid-cols-1')}>
+                    <Input id={`${field.key}-date`} name={`${field.key}_due_date`} type="date" className="min-h-11 bg-white text-base" />
+                    {'supportsKm' in field && field.supportsKm && <Input name={`${field.key}_due_km`} type="number" min="0" step="1" inputMode="numeric" placeholder="Km previsti" aria-label={`Chilometraggio ${field.label}`} className="min-h-11 bg-white text-base" />}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <details className="rounded-xl border border-zinc-200 bg-white p-3">
+              <summary className="min-h-11 flex items-center cursor-pointer text-sm font-semibold text-orange-800">Parcheggio e cambio gomme</summary>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
+                {INITIAL_DEADLINE_FIELDS.filter(field => !('primary' in field && field.primary)).map(field => (
+                  <label key={field.key} className="text-xs font-semibold text-zinc-800">{field.label}
+                    <span className="block text-[11px] font-normal text-zinc-500 mb-1">{field.hint}</span>
+                    <Input name={`${field.key}_due_date`} type="date" className="min-h-11 bg-white text-base" />
+                  </label>
+                ))}
+              </div>
+            </details>
+
+            <label className="block text-xs font-semibold text-zinc-800">Avvisami in anticipo
+              <span className="block text-[11px] font-normal text-zinc-500 mb-1">Giorni prima della scadenza</span>
+              <Input name="deadline_warning_days" type="number" min="0" max="365" step="1" defaultValue="30" className="min-h-11 max-w-40 bg-white text-base" />
+            </label>
+          </section>
+
           {/* SECTION 5: LIVERY COLOR PALETTE */}
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-700 flex items-center gap-1.5">
                 <Palette className="w-3.5 h-3.5 text-orange-700" />
-                4. Colore del veicolo
+                5. Colore del veicolo
               </Label>
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] font-mono text-zinc-600">{primaryColor}</span>
@@ -441,7 +486,7 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
                   Salvataggio...
                 </>
               ) : (
-                'Salva nel Garage'
+                'Salva veicolo e scadenze'
               )}
             </Button>
           </div>

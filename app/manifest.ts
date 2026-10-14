@@ -2,8 +2,8 @@
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'FleetDesk - Gestionale interno',
-    short_name: 'FleetDesk',
+    name: 'GestionaleVeicoli - Gestionale interno',
+    short_name: 'GestionaleVeicoli',
     description: 'Gestionale interno per moto, auto, furgoni e scooter: interventi e scadenze',
     start_url: '/',
     display: 'standalone',

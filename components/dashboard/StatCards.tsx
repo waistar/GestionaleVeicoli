@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,16 +14,19 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Bike } from '@/lib/supabase/types';
+import { formatCurrency } from '@/lib/expenses';
 import { updateBikeKm } from '@/app/actions/bikes';
-import { Gauge, Bell, Wrench, Edit3, Loader2 } from 'lucide-react';
+import { Gauge, Bell, Wallet, Edit3, Loader2 } from 'lucide-react';
 
 interface StatCardsProps {
   bike: Bike;
   alertsCount: number;
-  totalInterventions: number;
+  expenseTotalCents: number;
+  expenseCount: number;
+  expensesUnavailable?: boolean;
 }
 
-export function StatCards({ bike, alertsCount, totalInterventions }: StatCardsProps) {
+export function StatCards({ bike, alertsCount, expenseTotalCents, expenseCount, expensesUnavailable = false }: StatCardsProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [newKm, setNewKm] = useState(bike.current_km_hours.toString());
   const [isUpdating, setIsUpdating] = useState(false);
@@ -78,23 +82,25 @@ export function StatCards({ bike, alertsCount, totalInterventions }: StatCardsPr
           </div>
         </Card>
 
-        {/* Interventi Totali */}
-        <Card className="bg-zinc-50/90 border-zinc-200 p-3 sm:p-4 md:p-5 flex flex-col justify-between shadow-md rounded-2xl hover:border-zinc-200 transition-all">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-semibold text-zinc-600 uppercase tracking-wider">Interventi</span>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-700">
-              <Wrench className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        {/* Spese del veicolo */}
+        <Link href={`/spese?vehicle=${bike.id}`} aria-label={`Apri le spese di ${bike.name}`} className="min-w-0">
+          <Card className="h-full bg-zinc-50/90 border-zinc-200 p-3 sm:p-4 md:p-5 flex flex-col justify-between shadow-md rounded-2xl hover:border-orange-300 hover:bg-orange-50/40 transition-all">
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[11px] sm:text-xs font-semibold text-zinc-600 uppercase tracking-wider truncate">Spese mezzo</span>
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-700 shrink-0">
+                <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
             </div>
-          </div>
-          <div className="mt-2 sm:mt-3">
-            <span className="text-lg sm:text-2xl lg:text-3xl font-bold font-mono text-zinc-900 tracking-tight block">
-              {totalInterventions}
-            </span>
-            <span className="text-[10px] sm:text-xs text-zinc-600 block mt-0.5 sm:mt-1">
-              Interventi registrati
-            </span>
-          </div>
-        </Card>
+            <div className="mt-2 sm:mt-3 min-w-0">
+              <span className="text-base sm:text-2xl lg:text-3xl font-bold font-mono text-zinc-900 tracking-tight block break-words leading-tight">
+                {expensesUnavailable ? '—' : formatCurrency(expenseTotalCents)}
+              </span>
+              <span className="text-[10px] sm:text-xs text-zinc-600 block mt-0.5 sm:mt-1">
+                {expensesUnavailable ? 'Dati non disponibili' : `${expenseCount} ${expenseCount === 1 ? 'spesa registrata' : 'spese registrate'}`}
+              </span>
+            </div>
+          </Card>
+        </Link>
       </div>
 
       {/* Dialog aggiornamento Chilometri / Ore */}

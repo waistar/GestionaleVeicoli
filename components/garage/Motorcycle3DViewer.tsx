@@ -805,9 +805,6 @@ export function Motorcycle3DViewer({
           <span className="text-xs font-bold text-zinc-900 tracking-tight">
             {bike.name || 'Anteprima veicolo'}
           </span>
-          <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-zinc-100 text-orange-700 font-semibold border border-zinc-200">
-            {category}
-          </span>
         </div>
 
         {/* 3D Interactive Badge */}

@@ -1,6 +1,7 @@
 'use server'
 
 import { VEHICLE_TYPES, type VehicleType } from '@/lib/vehicle-catalog';
+import { parseInitialDeadlines } from '@/lib/initial-deadlines';
 import { createClient } from '@/lib/supabase/server';
 import { Bike } from '@/lib/supabase/types';
 import { revalidatePath } from 'next/cache';
@@ -77,6 +78,8 @@ export async function createBike(formData: FormData): Promise<{
     if (!VEHICLE_TYPES.some(t => t.value === vehicleType) || plate.length > 20 || !Number.isFinite(kmHours) || kmHours < 0 || !name || !model) return { success: false, error: 'Controlla tipo, nome, modello, targa e chilometraggio.' };
     const primaryColor = (formData.get('primary_color') as string)?.trim() || '#f97316';
     const accentColor = (formData.get('accent_color') as string)?.trim() || '#18181b';
+    const initialDeadlines = parseInitialDeadlines(Object.fromEntries(formData), 'pending');
+    if (!initialDeadlines.success) return { success: false, error: initialDeadlines.error };
 
     if (!name) {
       return { success: false, error: 'La marca o il nome del veicolo è obbligatorio.' };
@@ -137,6 +140,16 @@ export async function createBike(formData: FormData): Promise<{
     }
 
     const createdBike = newBike as Bike;
+
+    if (initialDeadlines.reminders.length > 0) {
+      const { error: remindersError } = await supabase
+        .from('vehicle_reminders')
+        .insert(initialDeadlines.reminders.map(reminder => ({ ...reminder, bike_id: createdBike.id })));
+      if (remindersError) {
+        await supabase.from('bikes').delete().eq('id', createdBike.id);
+        return { success: false, error: `Veicolo non registrato: impossibile salvare le scadenze iniziali. ${remindersError.message}` };
+      }
+    }
 
     // Set this newly created bike as active
     const cookieStore = await cookies();

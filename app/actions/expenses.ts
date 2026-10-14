@@ -40,7 +40,7 @@ export async function saveExpense(formData: FormData) {
     const query = id ? db.from('vehicle_expenses').update(payload).eq('id', id) : db.from('vehicle_expenses').insert(payload);
     const { data, error } = await query.select('id').single();
     if (error || !data) return { success: false, error: 'Salvataggio non riuscito. Verifica che il registro spese sia configurato e riprova.' };
-    revalidatePath('/spese'); return { success: true };
+    revalidatePath('/spese'); revalidatePath('/'); return { success: true };
   } catch { return { success: false, error: 'Salvataggio non riuscito. Riprova tra poco.' }; }
 }
 export async function deleteExpense(id: string) {
@@ -49,6 +49,6 @@ export async function deleteExpense(id: string) {
     const db = await createClient();
     const { data, error } = await db.from('vehicle_expenses').delete().eq('id', id).select('id').single();
     if (error || !data) return { success: false, error: 'La spesa non è stata eliminata. Ricarica la pagina e riprova.' };
-    revalidatePath('/spese'); return { success: true };
+    revalidatePath('/spese'); revalidatePath('/'); return { success: true };
   } catch { return { success: false, error: 'Eliminazione non riuscita. Riprova tra poco.' }; }
 }

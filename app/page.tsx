@@ -4,23 +4,31 @@ import React from 'react';
 import Link from 'next/link';
 import { getMainData } from '@/app/actions/maintenance';
 import { getAllBikes } from '@/app/actions/bikes';
+import { getExpenses } from '@/app/actions/expenses';
 import { calculateStats } from '@/lib/reminders';
+import { summarizeExpenses } from '@/lib/expenses';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { StatCards } from '@/components/dashboard/StatCards';
 import { AlertBanner } from '@/components/dashboard/AlertBanner';
-import { RecentInterventions } from '@/components/dashboard/RecentInterventions';
 import { DashboardRemindersWidget } from '@/components/dashboard/DashboardRemindersWidget';
 import { SupabaseSetupBanner } from '@/components/setup/SupabaseSetupBanner';
-import { Plus, Wrench, ShieldCheck, Warehouse } from 'lucide-react';
+import { Bell, Plus, ShieldCheck, Warehouse } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  const { bikes } = await getAllBikes();
-  const { bike, logs, scheduled, isFallback, error } = await getMainData();
+  const [{ bikes }, mainData, expenseData] = await Promise.all([getAllBikes(), getMainData(), getExpenses()]);
+  const { bike, logs, scheduled, isFallback, error } = mainData;
   if (!bike) return <EmptyGarage databaseUnavailable={isFallback} />;
   const stats = calculateStats(bike, logs, scheduled);
+  const vehicleExpenses = expenseData.expenses.filter(expense => expense.vehicle_ref === bike.id);
+  let expenseTotalCents = 0;
+  let expensesUnavailable = Boolean(expenseData.error);
+  if (!expensesUnavailable) {
+    try { expenseTotalCents = summarizeExpenses(vehicleExpenses, bikes).total; }
+    catch { expensesUnavailable = true; }
+  }
 
   return (
     <>
@@ -38,7 +46,7 @@ export default async function DashboardPage() {
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-bold text-zinc-900">Pannello operativo</h1>
+                <h1 className="text-xl font-bold text-zinc-900">Scadenze del veicolo</h1>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-700 border border-orange-500/20 font-semibold font-mono">
                   {bike.name} · {bike.model} {bike.year ? `• ${bike.year}` : ''}
                 </span>
@@ -47,7 +55,7 @@ export default async function DashboardPage() {
                 </span>
               </div>
               <p className="text-xs text-zinc-600 mt-1">
-                Moto, auto, furgoni e scooter: manutenzioni, documenti e scadenze del veicolo selezionato.
+                Assicurazione, bollo, revisione, documenti e manutenzioni del veicolo selezionato.
               </p>
             </div>
           </div>
@@ -61,18 +69,18 @@ export default async function DashboardPage() {
               Parco veicoli ({bikes.length})
             </Link>
             <Link
-              href="/interventi"
+              href="/promemoria"
               className="px-3.5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-semibold flex items-center gap-1.5 transition-colors"
             >
-              <Wrench className="w-3.5 h-3.5 text-orange-700" />
-              Interventi ({logs.length})
+              <Bell className="w-3.5 h-3.5 text-orange-700" />
+              Scadenzario ({stats.reminders.length})
             </Link>
             <Link
-              href="/interventi/nuovo"
+              href={`/promemoria?new=1&vehicle=${bike.id}`}
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold shadow-md shadow-orange-600/20 flex items-center gap-1.5 transition-all active:scale-95"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
-              Nuovo Intervento
+              Nuova scadenza
             </Link>
           </div>
         </div>
@@ -81,7 +89,9 @@ export default async function DashboardPage() {
         <StatCards
           bike={bike}
           alertsCount={stats.alertsTotal}
-          totalInterventions={stats.totalInterventions}
+          expenseTotalCents={expenseTotalCents}
+          expenseCount={vehicleExpenses.length}
+          expensesUnavailable={expensesUnavailable}
         />
 
         {/* 2-Column Responsive Grid on Desktop */}
@@ -89,7 +99,6 @@ export default async function DashboardPage() {
           {/* Main Column */}
           <div className="lg:col-span-7 space-y-6">
             <AlertBanner reminders={stats.reminders} />
-            <RecentInterventions logs={logs} />
           </div>
 
           {/* Sidebar Column (Promemoria widget & Scheda veicolo) */}

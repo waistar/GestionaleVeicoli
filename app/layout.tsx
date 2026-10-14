@@ -15,13 +15,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FleetDesk | Gestionale interno",
-  description: "Gestionale interno per parco veicoli, registro degli interventi e scadenze di manutenzione",
+  title: "GestionaleVeicoli | Gestionale interno",
+  description: "Gestionale interno per assicurazioni, bollo, revisione e tutte le scadenze del parco veicoli",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "FleetDesk",
+    title: "GestionaleVeicoli",
   },
   icons: {
     icon: [

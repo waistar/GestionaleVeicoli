@@ -10,8 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 
 const input = 'w-full min-h-11 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-base text-zinc-900';
 const button = 'min-h-11 rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:opacity-50';
-export function ExpenseManager({ bikes, expenses, error }: { bikes: Bike[]; expenses: VehicleExpense[]; error?: string }) {
-  const [vehicle, setVehicle] = useState('all');
+export function ExpenseManager({ bikes, expenses, error, initialVehicle }: { bikes: Bike[]; expenses: VehicleExpense[]; error?: string; initialVehicle?: string }) {
+  const [vehicle, setVehicle] = useState(initialVehicle || 'all');
   const [category, setCategory] = useState('all');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');

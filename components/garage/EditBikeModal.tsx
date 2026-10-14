@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react';
+import Link from 'next/link';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ import {
   Loader2,
   Palette,
   AlertCircle,
+  CalendarClock,
 } from 'lucide-react';
 
 interface EditBikeModalProps {
@@ -309,6 +311,14 @@ export function EditBikeModal({ bike, open, onOpenChange, onBikeUpdated }: EditB
               />
             </div>
           </div>
+
+          <section className="rounded-2xl border border-orange-200 bg-orange-50/50 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2"><CalendarClock className="w-4 h-4 text-orange-700" />Scadenze del veicolo</h3>
+              <p className="text-xs text-zinc-600 mt-1">Gestisci bollo, assicurazione, revisione, parcheggio, tagliando e cambio gomme.</p>
+            </div>
+            <Link href={`/promemoria?vehicle=${bike?.id || ''}`} onClick={() => onOpenChange(false)} className="min-h-11 inline-flex items-center justify-center rounded-xl bg-orange-600 px-4 text-sm font-semibold text-white">Apri scadenzario</Link>
+          </section>
 
           {/* Color */}
           <div className="space-y-2">

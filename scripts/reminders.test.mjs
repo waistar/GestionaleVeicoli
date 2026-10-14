@@ -1,18 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import path from 'node:path';
 import { createRequire } from 'node:module';
 import ts from 'typescript';
 const require = createRequire(import.meta.url);
 function load(file) {
   const code = ts.transpileModule(fs.readFileSync(new URL('../' + file, import.meta.url), 'utf8'), {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
   const loadedModule = {exports:{}};
-  new Function('require','module','exports',code)(require,loadedModule,loadedModule.exports);
+  const localRequire = id => id.startsWith('.') ? load(path.posix.normalize(path.posix.join(path.posix.dirname(file), id)) + '.ts') : require(id);
+  new Function('require','module','exports',code)(localRequire,loadedModule,loadedModule.exports);
   return loadedModule.exports;
 }
 const {calculateReminders, daysBetween, reminderRemaining} = load('lib/reminders.ts');
 const {reminderSchema} = load('lib/reminder-schema.ts');
 const {catalogFor, vehicleType} = load('lib/vehicle-catalog.ts');
+const {parseInitialDeadlines} = load('lib/initial-deadlines.ts');
 const bike = {id:'b1',name:'Veicolo',model:'Test',current_km_hours:10000};
 const row = (fields={}) => ({id:'r1',bike_id:'b1',title:'RCA',category:'Assicurazione RCA',notes:'',due_date:'2026-11-01',due_km:null,warning_days:30,warning_km:500,completed_at:null,created_at:'2026-01-01',...fields});
 const calc = fields => calculateReminders(bike,[],[row(fields)],'2026-10-14')[0];
@@ -50,16 +53,80 @@ test('più scadenze della stessa categoria rimangono indipendenti',()=>{
  assert.equal(reminders.length,2);assert.equal(reminders[0].status,'expired');
 });
 test('catalogo per tipo e compatibilità con i vecchi scooter',()=>{
- for(const type of ['moto','auto','furgone','scooter']) for(const category of ['Bollo','Assicurazione RCA','Revisione','Tagliando']) assert.ok(catalogFor(type).some(c=>c.label===category));
- assert.ok(catalogFor('furgone').some(c=>c.label==='Cronotachigrafo'));
- assert.ok(!catalogFor('moto').some(c=>c.label==='Cronotachigrafo'));
+ const expected = ['Bollo','Assicurazione RCA','Revisione','Abbonamento parcheggio / sosta blu','Tagliando','Cambio gomme'];
+ for(const type of ['moto','auto','furgone','scooter']) assert.deepEqual(catalogFor(type).map(c=>c.label), expected);
  assert.equal(vehicleType({category:'scooter'}),'scooter');
 });
 test('validazione date reali, valori numerici e almeno una soglia',()=>{
- const valid={bike_id:'b1a2c3d4-0000-4000-8000-000000000001',title:'Bollo',category:'Bollo',notes:'',due_date:'2026-12-31',due_km:'',warning_days:'30',warning_km:'500'};
+ const valid={bike_id:'b1a2c3d4-0000-4000-8000-000000000001',title:'Tagliando',category:'Tagliando',notes:'',due_date:'2026-12-31',due_km:'',warning_days:'30',warning_km:'500'};
  assert.equal(reminderSchema.safeParse(valid).success,true);
  for(const patch of [{due_date:'2026-02-30'},{due_date:'',due_km:''},{due_km:'NaN'},{due_km:'-1'},{warning_days:'-1'},{title:' '},{bike_id:'invalid'}]) assert.equal(reminderSchema.safeParse({...valid,...patch}).success,false);
  assert.equal(reminderSchema.safeParse({...valid,due_date:'',due_km:'0'}).success,true);
+});
+
+test('bollo, assicurazione e revisione usano esclusivamente la data',()=>{
+ for (const category of ['Bollo','Assicurazione RCA','Revisione']) {
+   const input={bike_id:'b1a2c3d4-0000-4000-8000-000000000001',title:category,category,notes:'',due_date:'2027-01-01',due_km:'25000',warning_days:'30',warning_km:'500'};
+   const parsed=reminderSchema.safeParse(input);
+   assert.equal(parsed.success,true);
+   assert.equal(parsed.data.due_km,null);
+   assert.equal(parsed.data.warning_km,0);
+   assert.equal(reminderSchema.safeParse({...input,due_date:''}).success,false);
+ }
+});
+
+test('la registrazione del veicolo prepara le sei scadenze del catalogo',()=>{
+  const parsed = parseInitialDeadlines({
+    insurance_due_date:'2027-01-15', road_tax_due_date:'2026-12-31', inspection_due_date:'2028-04-10',
+    service_due_date:'2027-02-01', service_due_km:'25000', parking_subscription_due_date:'2027-06-30',
+    tyre_change_due_date:'2026-11-15', deadline_warning_days:'45',
+  }, 'vehicle-id');
+  assert.equal(parsed.success, true);
+  assert.deepEqual(parsed.reminders.map(item=>item.category), ['Bollo','Assicurazione RCA','Revisione','Tagliando','Abbonamento parcheggio / sosta blu','Cambio gomme']);
+  assert.equal(parsed.reminders[3].due_km, 25000);
+  assert.ok(parsed.reminders.every(item=>item.warning_days === 45 && item.bike_id === 'vehicle-id'));
+});
+
+test('le scadenze iniziali vuote sono facoltative ma i valori parziali o non validi sono respinti',()=>{
+  assert.deepEqual(parseInitialDeadlines({}, 'vehicle-id'), {success:true, reminders:[]});
+  for (const values of [
+    {insurance_due_date:'2026-02-30'}, {service_due_km:'-1'}, {deadline_warning_days:'366'},
+    {parking_subscription_due_date:'2026-02-30'}, {tyre_change_due_date:'data-non-valida'},
+  ]) assert.equal(parseInitialDeadlines(values, 'vehicle-id').success, false);
+});
+
+test('la creazione del veicolo salva nello stesso flusso le scadenze compilate', async () => {
+  const source = fs.readFileSync(new URL('../app/actions/bikes.ts', import.meta.url), 'utf8');
+  const code = ts.transpileModule(source, {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
+  const vehicleId = 'b1a2c3d4-0000-4000-8000-000000000099';
+  let insertedBike;
+  let insertedReminders;
+  const db = {
+    from(table) {
+      if (table === 'bikes') return {
+        insert(payload) { insertedBike = payload; return {select() { return {single: async()=>({data:{id:vehicleId,created_at:'2026-10-14',...payload},error:null})}; }}; },
+        delete() { return {eq:async()=>({error:null})}; },
+      };
+      if (table === 'vehicle_reminders') return { insert: async payload => { insertedReminders = payload; return {error:null}; } };
+      throw Error(`Tabella inattesa: ${table}`);
+    },
+  };
+  const mocks = {
+    '@/lib/vehicle-catalog': load('lib/vehicle-catalog.ts'),
+    '@/lib/initial-deadlines': load('lib/initial-deadlines.ts'),
+    '@/lib/supabase/server': { createClient: async()=>db },
+    'next/cache': { revalidatePath:()=>{} },
+    'next/headers': { cookies:async()=>({set:()=>{}}) },
+  };
+  const loadedModule = {exports:{}};
+  new Function('require','module','exports',code)(id => mocks[id] || require(id),loadedModule,loadedModule.exports);
+  const form = new FormData();
+  for (const [key,value] of Object.entries({vehicle_type:'auto',plate:'AB123CD',name:'Fiat',model:'Panda',current_km_hours:'12000',insurance_due_date:'2027-01-15',road_tax_due_date:'2026-12-31',inspection_due_date:'2028-04-10',service_due_km:'25000',deadline_warning_days:'30'})) form.set(key,value);
+  const result = await loadedModule.exports.createBike(form);
+  assert.equal(result.success,true);
+  assert.equal(insertedBike.vehicle_type,'auto');
+  assert.deepEqual(insertedReminders.map(item=>item.category),['Bollo','Assicurazione RCA','Revisione','Tagliando']);
+  assert.ok(insertedReminders.every(item=>item.bike_id===vehicleId));
 });
 
 test('un archivio vuoto resta vuoto senza creare veicoli di esempio', async () => {
@@ -73,6 +140,7 @@ test('un archivio vuoto resta vuoto senza creare veicoli di esempio', async () =
   const query = { select() { return this; }, async order() { return {data:[],error:null}; }, insert() { inserts++; throw Error('Inserimento inatteso'); } };
   const mocks = {
     '@/lib/vehicle-catalog': load('lib/vehicle-catalog.ts'),
+    '@/lib/initial-deadlines': load('lib/initial-deadlines.ts'),
     '@/lib/supabase/server': { createClient: async () => ({from:()=>query}) },
     'next/cache': { revalidatePath:()=>{} },
     'next/headers': { cookies:async()=>({get:()=>({value:'vecchio-id-cancellato'})}) },

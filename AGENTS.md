@@ -1,4 +1,4 @@
-# AGENTS.md — FleetDesk (Motorbike Management System)
+# AGENTS.md — GestionaleVeicoli (Motorbike Management System)
 
 ## 1. Descrizione Architettura e Stack Tecnologico
 Applicazione web mobile-first installabile come **Progressive Web App (PWA)**, progettata per la gestione interna del parco veicoli (moto, auto, furgoni e scooter), del registro tecnico degli interventi e delle scadenze di manutenzione. La pagina `/spese` registra importi in centesimi e presenta totali per veicolo, categoria e periodo. La colonna legacy `maintenance_logs.cost` resta per compatibilità; non alimenta il nuovo registro spese.
@@ -97,3 +97,8 @@ Non creare veicoli, interventi o scadenze di esempio durante le letture o la con
 
 ## Registrazione veicoli
 I moduli di aggiunta e modifica sono comuni al parco veicoli e non espongono sottocategorie moto. Il tipo predefinito per un nuovo veicolo è Auto. La colonna legacy `category` resta compatibile con i dati esistenti e non viene riscritta durante la modifica dell’anagrafica.
+
+La registrazione è centrata sulle scadenze: può creare insieme al veicolo Bollo, Assicurazione RCA, Revisione, Abbonamento parcheggio / sosta blu, Tagliando e Cambio gomme. Le date derivano dai documenti inseriti dall’operatore e non vengono calcolate automaticamente. Se il salvataggio delle scadenze iniziali fallisce, la creazione del veicolo viene annullata.
+
+## Priorità dell'interfaccia
+Lo scadenzario è il contenuto principale di dashboard e navigazione. Lo storico interventi resta disponibile come funzione secondaria e non deve tornare a essere la call to action principale.

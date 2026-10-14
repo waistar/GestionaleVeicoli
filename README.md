@@ -1,6 +1,6 @@
-# FleetDesk — gestionale interno veicoli
+# GestionaleVeicoli — gestionale interno veicoli
 
-Applicazione Next.js per **moto, auto, furgoni e scooter**. Tema chiaro, interfaccia mobile, registro tecnico e scadenzario. Registro spese dedicato con totali e suddivisioni per veicolo e categoria.
+Applicazione Next.js per **moto, auto, furgoni e scooter**, centrata sullo scadenzario del parco veicoli. Assicurazioni, bollo, revisione, documenti e manutenzioni si configurano per data o chilometraggio. Lo storico tecnico e il registro spese restano funzioni di supporto.
 
 ## Avvio locale
 
@@ -25,9 +25,9 @@ Il progetto Supabase scelto è **gestionale veicoli**, separato da motocrossgest
 
 ## Uso
 
-1. In **Parco veicoli**, aggiungi o modifica tipo, marca/nome, modello, targa, anno e chilometri. La registrazione usa una scheda comune con foto o icona del tipo scelto, senza sottocategorie moto.
-2. In **Scadenzario**, consulta tutti i veicoli oppure filtra per veicolo, stato e ricerca.
-3. Dal **catalogo** pianifica bollo, superbollo, RCA, garanzie accessorie, revisione, documenti, tagliandi, filtri, distribuzione, freni, gomme, batterie, climatizzatore, GPL/metano, AdBlue e controlli professionali. Le voci sono filtrate per tipo; titolo e note permettono attività personalizzate.
+1. In **Parco veicoli**, aggiungi tipo, marca/nome, modello, targa, anno e chilometri, quindi configura le scadenze disponibili. Le date sono quelle effettive dei documenti.
+2. In **Scadenzario**, consulta tutti i veicoli, aggiungi ulteriori adempimenti oppure filtra per veicolo, stato e ricerca.
+3. Dal **catalogo** pianifica Bollo, Assicurazione RCA, Revisione, Abbonamento parcheggio / sosta blu, Tagliando e Cambio gomme.
 4. Inserisci **data**, **chilometraggio** o entrambi. Con entrambi configurati, prevale la prima soglia raggiunta. L'avviso predefinito è di 30 giorni / 500 km, modificabile per ogni voce.
 5. Usa **Segna completata** per archiviare l'attività nello storico. In fondo allo scadenzario, apri le completate e scegli **Rinnova** per inserire una nuova scadenza effettiva.
 6. Nel registro interventi puoi continuare a impostare un prossimo chilometraggio per categoria. Il promemoria usa il più recente intervento del veicolo; un nuovo intervento senza soglia rimuove il vecchio target.

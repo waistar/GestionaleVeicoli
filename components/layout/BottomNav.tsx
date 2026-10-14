@@ -7,9 +7,9 @@ export function BottomNav({ alertsCount = 0 }: { alertsCount?: number }) {
   const links = [
     { href: '/', label: 'Pannello', Icon: LayoutDashboard },
     { href: '/garage', label: 'Veicoli', Icon: Warehouse },
-    { href: '/interventi', label: 'Interventi', Icon: Wrench },
     { href: '/promemoria', label: 'Scadenze', Icon: Bell },
     { href: '/spese', label: 'Spese', Icon: Wallet },
+    { href: '/interventi', label: 'Storico', Icon: Wrench },
   ];
   return <nav aria-label="Navigazione mobile" className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-zinc-200 px-2 py-1.5 pb-safe md:hidden"><div className="max-w-md mx-auto grid grid-cols-5">{links.map(({href, label, Icon}) => {
     const active = href === '/' ? pathname === '/' : pathname.startsWith(href);

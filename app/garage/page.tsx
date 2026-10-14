@@ -31,7 +31,7 @@ export default async function GaragePage() {
               Parco veicoli
             </h1>
             <p className="text-xs sm:text-sm text-zinc-600 mt-1">
-              Anagrafica dei veicoli, schede tecniche e selezione del veicolo su cui operare.
+              Anagrafica dei veicoli e punto di partenza per assicurazioni, bollo, revisione e altre scadenze.
             </p>
           </div>
         </div>

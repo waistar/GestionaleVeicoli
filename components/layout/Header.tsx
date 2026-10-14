@@ -33,7 +33,6 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
 
   const isHome = pathname === '/';
   const isInterventi = pathname === '/interventi';
-  const isNuovo = pathname === '/interventi/nuovo';
   const isPromemoria = pathname === '/promemoria';
   const isGarage = pathname === '/garage';
   const isExpenses = pathname === '/spese';
@@ -71,7 +70,7 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-base sm:text-lg text-zinc-900 tracking-tight">FleetDesk</span>
+                <span className="font-bold text-sm sm:text-lg text-zinc-900 tracking-tight">GestionaleVeicoli</span>
               </div>
             </div>
           </Link>
@@ -188,18 +187,6 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
           </Link>
 
           <Link
-            href="/interventi"
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              isInterventi
-                ? 'bg-zinc-100 text-orange-700 shadow-sm'
-                : 'text-zinc-600 hover:text-zinc-800 hover:bg-zinc-100'
-            }`}
-          >
-            <Wrench className="w-4 h-4" />
-            <span>Storico Interventi</span>
-          </Link>
-
-          <Link
             href="/promemoria"
             className={`relative flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               isPromemoria
@@ -215,7 +202,19 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
                 </span>
               )}
             </div>
-            <span>Scadenze & Promemoria</span>
+            <span>Scadenze</span>
+          </Link>
+
+          <Link
+            href="/interventi"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              isInterventi
+                ? 'bg-zinc-100 text-orange-700 shadow-sm'
+                : 'text-zinc-600 hover:text-zinc-800 hover:bg-zinc-100'
+            }`}
+          >
+            <Wrench className="w-4 h-4" />
+            <span>Storico</span>
           </Link>
           <Link href="/spese" aria-current={isExpenses ? 'page' : undefined} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${isExpenses ? 'bg-zinc-100 text-orange-700 shadow-sm' : 'text-zinc-600 hover:bg-zinc-100'}`}><Wallet className="w-4 h-4" /><span>Spese</span></Link>
         </nav>
@@ -233,17 +232,17 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
             </span>
           </div>
 
-          {/* Desktop New Intervention CTA Button */}
+          {/* Primary deadline action */}
           <Link
-            href="/interventi/nuovo"
+            href={`/promemoria?new=1&vehicle=${bike.id}`}
             className={`hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 ${
-              isNuovo
+              isPromemoria
                 ? 'bg-zinc-100 text-zinc-700 border border-zinc-200'
                 : 'bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white shadow-orange-600/20'
             }`}
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Nuovo Intervento</span>
+            <span>Nuova scadenza</span>
           </Link>
         </div>
       </div>
