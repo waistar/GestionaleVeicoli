@@ -108,6 +108,15 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
               </div>
 
               <div className="py-1 max-h-56 overflow-y-auto space-y-1">
+                <Link
+                  href="/"
+                  onClick={() => setDropdownOpen(false)}
+                  className="w-full flex items-center gap-2 p-2 rounded-xl text-left text-xs font-semibold text-zinc-800 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                >
+                  <span className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center shrink-0"><LayoutDashboard className="w-4 h-4" /></span>
+                  <span><span className="block font-bold">Tutti i veicoli</span><span className="block text-[10px] font-normal text-zinc-500">Panoramica generale</span></span>
+                </Link>
+                <div className="h-px bg-zinc-100 my-1" />
                 {allBikes && allBikes.length > 0 ? (
                   allBikes.map((b) => {
                     const isCurrent = b.id === bike.id;

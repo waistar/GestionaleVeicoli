@@ -18,7 +18,7 @@ export default async function GaragePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-100 text-zinc-900">
-      <Header bike={bike} alertsCount={stats.alertsTotal} />
+      <Header bike={bike} alertsCount={stats.alertsTotal} allBikes={bikes} />
 
       <main className="flex-1 max-w-md md:max-w-5xl lg:max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 md:pt-6 pb-24 md:pb-10 space-y-6">
         {/* Page Title & Garage Intro */}

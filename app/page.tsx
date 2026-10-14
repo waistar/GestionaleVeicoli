@@ -6,7 +6,7 @@ import { calculateReminders, formatKm, reminderRemaining, reminderTarget, sortRe
 import { vehicleTypeLabel } from '@/lib/vehicle-catalog';
 import { EmptyGarage } from '@/components/garage/EmptyGarage';
 import { VehicleBrandLogo } from '@/components/garage/VehicleBrandLogo';
-import { WorkspaceHeader } from '@/components/layout/WorkspaceHeader';
+import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { CalendarClock, ChevronRight, Plus, Warehouse } from 'lucide-react';
 import { formatCurrency } from '@/lib/expenses';
@@ -39,9 +39,10 @@ export default async function FleetDashboardPage() {
   const expiredCount = reminders.filter(reminder => reminder.status === 'expired').length;
   const warningCount = reminders.filter(reminder => reminder.status === 'warning').length;
   const alertsCount = expiredCount + warningCount;
+  const activeVehicle = fleet.bikes.find(vehicle => vehicle.id === fleet.activeBikeId) || fleet.bikes[0];
 
   return <>
-    <WorkspaceHeader />
+    <Header bike={activeVehicle} alertsCount={alertsCount} allBikes={fleet.bikes} />
     <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-24 space-y-7">
       <section className="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
         <div><p className="text-xs font-semibold uppercase tracking-wider text-orange-700">GestionaleVeicoli · panoramica generale</p><h1 className="mt-1 text-2xl sm:text-3xl font-bold text-zinc-900">Tutte le scadenze del parco veicoli</h1><p className="mt-2 text-sm text-zinc-600">Controlla le priorità generali, poi apri il singolo mezzo per gestirne dettagli, chilometri e spese.</p></div>
