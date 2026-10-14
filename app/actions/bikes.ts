@@ -144,10 +144,13 @@ export async function createBike(formData: FormData): Promise<{
     if (initialDeadlines.reminders.length > 0) {
       const { error: remindersError } = await supabase
         .from('vehicle_reminders')
-        .insert(initialDeadlines.reminders.map(reminder => ({ ...reminder, bike_id: createdBike.id })));
+        .insert(initialDeadlines.reminders.map(reminder => {
+          const { amount_cents, ...values } = reminder;
+          return { ...values, ...(amount_cents == null ? {} : { amount_cents }), bike_id: createdBike.id };
+        }));
       if (remindersError) {
         await supabase.from('bikes').delete().eq('id', createdBike.id);
-        return { success: false, error: `Veicolo non registrato: impossibile salvare le scadenze iniziali. ${remindersError.message}` };
+        return { success: false, error: remindersError.message.includes('amount_cents') ? 'Veicolo non registrato: aggiorna il database per poter salvare gli importi delle scadenze.' : `Veicolo non registrato: impossibile salvare le scadenze iniziali. ${remindersError.message}` };
       }
     }
 

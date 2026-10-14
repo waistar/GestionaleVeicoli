@@ -385,18 +385,20 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
                     <Input id={`${field.key}-date`} name={`${field.key}_due_date`} type="date" className="min-h-11 bg-white text-base" />
                     {'supportsKm' in field && field.supportsKm && <Input name={`${field.key}_due_km`} type="number" min="0" step="1" inputMode="numeric" placeholder="Km previsti" aria-label={`Chilometraggio ${field.label}`} className="min-h-11 bg-white text-base" />}
                   </div>
+                  <Input name={`${field.key}_amount`} inputMode="decimal" placeholder="Importo € (facoltativo)" aria-label={`Importo ${field.label}`} className="min-h-11 mt-2 bg-white text-base" />
                 </div>
               ))}
             </div>
 
             <details className="rounded-xl border border-zinc-200 bg-white p-3">
-              <summary className="min-h-11 flex items-center cursor-pointer text-sm font-semibold text-orange-800">Parcheggio e cambio gomme</summary>
+              <summary className="min-h-11 flex items-center cursor-pointer text-sm font-semibold text-orange-800">Altre scadenze</summary>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
                 {INITIAL_DEADLINE_FIELDS.filter(field => !('primary' in field && field.primary)).map(field => (
-                  <label key={field.key} className="text-xs font-semibold text-zinc-800">{field.label}
+                  <div key={field.key} className="text-xs font-semibold text-zinc-800">{field.label}
                     <span className="block text-[11px] font-normal text-zinc-500 mb-1">{field.hint}</span>
                     <Input name={`${field.key}_due_date`} type="date" className="min-h-11 bg-white text-base" />
-                  </label>
+                    <Input name={`${field.key}_amount`} inputMode="decimal" placeholder="Importo € (facoltativo)" aria-label={`Importo ${field.label}`} className="min-h-11 mt-2 bg-white text-base" />
+                  </div>
                 ))}
               </div>
             </details>

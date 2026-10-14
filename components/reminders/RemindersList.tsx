@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { ReminderItem } from '@/lib/supabase/types';
 import { reminderRemaining, reminderTarget } from '@/lib/reminders';
+import { formatCurrency } from '@/lib/expenses';
 
 export function RemindersList({ reminders, onEdit, onComplete, disabled = false }: {
   reminders: ReminderItem[]; onEdit?: (item: ReminderItem) => void; onComplete?: (item: ReminderItem) => void; disabled?: boolean;
@@ -12,6 +13,7 @@ export function RemindersList({ reminders, onEdit, onComplete, disabled = false 
     <p className="text-xs text-zinc-500">{item.category}</p>
     <p className="text-sm text-zinc-600 whitespace-pre-wrap">{item.description}</p>
     <p className="font-mono text-sm font-semibold text-zinc-900">{reminderTarget(item)}</p>
+    {item.scheduled?.amount_cents != null && <p className="text-sm font-semibold text-zinc-900">Costo: {formatCurrency(item.scheduled.amount_cents)}</p>}
     <p className="text-sm text-zinc-700">{reminderRemaining(item)}</p>
     <div className="flex flex-wrap gap-2 pt-3 border-t border-zinc-100">
       {item.source === 'schedule' && onEdit && <button disabled={disabled} onClick={() => onEdit(item)} className="min-h-11 rounded-xl border border-zinc-200 px-3 text-sm disabled:opacity-50">Modifica</button>}

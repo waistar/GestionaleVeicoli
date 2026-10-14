@@ -14,10 +14,16 @@ export async function saveReminder(formData: FormData) {
   if (id && !z.string().uuid().safeParse(id).success) return { success: false, error: 'Scadenza non valida.' };
   try {
     const db = await createClient();
-    const payload = { ...parsed.data, completed_at: null };
+    const { amount_cents, ...reminder } = parsed.data;
+    const payload = { ...reminder, amount_cents, completed_at: null };
     const query = id ? db.from('vehicle_reminders').update(payload).eq('id', id) : db.from('vehicle_reminders').insert(payload);
-    const { data, error } = await query.select('id').single();
-    if (error || !data) return { success: false, error: error?.message || 'Scadenza non trovata.' };
+    let { data, error } = await query.select('id').single();
+    if (error?.message.includes('amount_cents') && amount_cents == null) {
+      const legacyPayload = { ...reminder, completed_at: null };
+      const retry = id ? db.from('vehicle_reminders').update(legacyPayload).eq('id', id) : db.from('vehicle_reminders').insert(legacyPayload);
+      ({ data, error } = await retry.select('id').single());
+    }
+    if (error || !data) return { success: false, error: error?.message.includes('amount_cents') ? 'Aggiorna il database per poter salvare l’importo della scadenza.' : error?.message || 'Scadenza non trovata.' };
     refresh(); return { success: true };
   } catch (e) { return { success: false, error: e instanceof Error ? e.message : 'Salvataggio non riuscito.' }; }
 }

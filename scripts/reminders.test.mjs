@@ -58,9 +58,11 @@ test('catalogo per tipo e compatibilità con i vecchi scooter',()=>{
  assert.equal(vehicleType({category:'scooter'}),'scooter');
 });
 test('validazione date reali, valori numerici e almeno una soglia',()=>{
- const valid={bike_id:'b1a2c3d4-0000-4000-8000-000000000001',title:'Tagliando',category:'Tagliando',notes:'',due_date:'2026-12-31',due_km:'',warning_days:'30',warning_km:'500'};
- assert.equal(reminderSchema.safeParse(valid).success,true);
- for(const patch of [{due_date:'2026-02-30'},{due_date:'',due_km:''},{due_km:'NaN'},{due_km:'-1'},{warning_days:'-1'},{title:' '},{bike_id:'invalid'}]) assert.equal(reminderSchema.safeParse({...valid,...patch}).success,false);
+ const valid={bike_id:'b1a2c3d4-0000-4000-8000-000000000001',title:'Tagliando',category:'Tagliando',notes:'',due_date:'2026-12-31',due_km:'',warning_days:'30',warning_km:'500',amount_cents:'1234,56'};
+ const parsed=reminderSchema.safeParse(valid);
+ assert.equal(parsed.success,true);
+ assert.equal(parsed.data.amount_cents,123456);
+ for(const patch of [{due_date:'2026-02-30'},{due_date:'',due_km:''},{due_km:'NaN'},{due_km:'-1'},{warning_days:'-1'},{title:' '},{bike_id:'invalid'},{amount_cents:'0'},{amount_cents:'non valido'}]) assert.equal(reminderSchema.safeParse({...valid,...patch}).success,false);
  assert.equal(reminderSchema.safeParse({...valid,due_date:'',due_km:'0'}).success,true);
 });
 
@@ -75,15 +77,16 @@ test('bollo, assicurazione e revisione usano esclusivamente la data',()=>{
  }
 });
 
-test('la registrazione del veicolo prepara le sei scadenze del catalogo',()=>{
+test('la registrazione del veicolo prepara tutte le scadenze del catalogo',()=>{
   const parsed = parseInitialDeadlines({
     insurance_due_date:'2027-01-15', road_tax_due_date:'2026-12-31', inspection_due_date:'2028-04-10',
-    service_due_date:'2027-02-01', service_due_km:'25000', parking_subscription_due_date:'2027-06-30',
+    service_due_date:'2027-02-01', service_due_km:'25000', oil_change_due_km:'20000', parking_subscription_due_date:'2027-06-30', road_tax_amount:'320,50',
     tyre_change_due_date:'2026-11-15', deadline_warning_days:'45',
   }, 'vehicle-id');
   assert.equal(parsed.success, true);
-  assert.deepEqual(parsed.reminders.map(item=>item.category), ['Bollo','Assicurazione RCA','Revisione','Tagliando','Abbonamento parcheggio / sosta blu','Cambio gomme']);
+  assert.deepEqual(parsed.reminders.map(item=>item.category), ['Bollo','Assicurazione RCA','Revisione','Tagliando','Cambio olio','Abbonamento parcheggio / sosta blu','Cambio gomme']);
   assert.equal(parsed.reminders[3].due_km, 25000);
+  assert.equal(parsed.reminders[0].amount_cents, 32050);
   assert.ok(parsed.reminders.every(item=>item.warning_days === 45 && item.bike_id === 'vehicle-id'));
 });
 
@@ -92,6 +95,7 @@ test('le scadenze iniziali vuote sono facoltative ma i valori parziali o non val
   for (const values of [
     {insurance_due_date:'2026-02-30'}, {service_due_km:'-1'}, {deadline_warning_days:'366'},
     {parking_subscription_due_date:'2026-02-30'}, {tyre_change_due_date:'data-non-valida'},
+    {road_tax_due_date:'2027-01-01',road_tax_amount:'0'}, {insurance_amount:'450,00'},
   ]) assert.equal(parseInitialDeadlines(values, 'vehicle-id').success, false);
 });
 

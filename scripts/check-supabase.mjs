@@ -21,7 +21,7 @@ if (!key.startsWith('sb_publishable_')) headers.Authorization = `Bearer ${key}`;
 const tables = {
   bikes: 'id,name,model,year,current_km_hours,image_url,category,primary_color,accent_color,vehicle_type,plate,created_at',
   maintenance_logs: 'id,bike_id,date,km_hours,category,description,image_url,next_due_km_hours,created_at',
-  vehicle_reminders: 'id,bike_id,title,category,notes,due_date,due_km,warning_days,warning_km,completed_at,created_at',
+  vehicle_reminders: 'id,bike_id,title,category,notes,due_date,due_km,warning_days,warning_km,amount_cents,completed_at,created_at',
   vehicle_expenses: 'id,bike_id,vehicle_ref,vehicle_label,date,category,description,amount_cents,notes,created_at',
 };
 let failures = 0;

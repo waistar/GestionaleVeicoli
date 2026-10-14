@@ -85,6 +85,7 @@ export interface VehicleReminder {
   due_km: number | null;
   warning_days: number;
   warning_km: number;
+  amount_cents: number | null;
   completed_at: string | null;
   created_at: string;
 }

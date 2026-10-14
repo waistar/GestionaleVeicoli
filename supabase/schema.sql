@@ -136,10 +136,12 @@ CREATE TABLE IF NOT EXISTS public.vehicle_reminders (
     due_km NUMERIC CHECK (due_km >= 0),
     warning_days INTEGER NOT NULL DEFAULT 30 CHECK (warning_days BETWEEN 0 AND 365),
     warning_km NUMERIC NOT NULL DEFAULT 500 CHECK (warning_km BETWEEN 0 AND 100000),
+    amount_cents BIGINT CHECK (amount_cents > 0 AND amount_cents <= 999999999),
     completed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CHECK (due_date IS NOT NULL OR due_km IS NOT NULL)
 );
+ALTER TABLE public.vehicle_reminders ADD COLUMN IF NOT EXISTS amount_cents BIGINT CHECK (amount_cents > 0 AND amount_cents <= 999999999);
 CREATE INDEX IF NOT EXISTS idx_vehicle_reminders_bike ON public.vehicle_reminders(bike_id);
 CREATE INDEX IF NOT EXISTS idx_vehicle_reminders_due ON public.vehicle_reminders(due_date) WHERE completed_at IS NULL;
 ALTER TABLE public.vehicle_reminders ENABLE ROW LEVEL SECURITY;

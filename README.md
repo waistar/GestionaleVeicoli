@@ -28,7 +28,7 @@ Il progetto Supabase scelto è **gestionale veicoli**, separato da motocrossgest
 1. In **Parco veicoli**, aggiungi tipo, marca/nome, modello, targa, anno e chilometri, quindi configura le scadenze disponibili. Le date sono quelle effettive dei documenti.
 2. In **Scadenzario**, consulta tutti i veicoli, aggiungi ulteriori adempimenti oppure filtra per veicolo, stato e ricerca.
 3. Dal **catalogo** pianifica Bollo, Assicurazione RCA, Revisione, Abbonamento parcheggio / sosta blu, Tagliando, Cambio olio e Cambio gomme.
-4. Inserisci **data**, **chilometraggio** o entrambi. Con entrambi configurati, prevale la prima soglia raggiunta. L'avviso predefinito è di 30 giorni / 500 km, modificabile per ogni voce.
+4. Inserisci **data**, **chilometraggio** o entrambi e, se utile, il relativo **importo in euro**. Con entrambe le soglie configurate, prevale la prima raggiunta. L'avviso predefinito è di 30 giorni / 500 km, modificabile per ogni voce.
 5. Usa **Segna completata** per archiviare l'attività nello storico. In fondo allo scadenzario, apri le completate e scegli **Rinnova** per inserire una nuova scadenza effettiva.
 6. Nel registro interventi puoi continuare a impostare un prossimo chilometraggio per categoria. Il promemoria usa il più recente intervento del veicolo; un nuovo intervento senza soglia rimuove il vecchio target.
 
