@@ -30,13 +30,22 @@ export function StatCards({ bike, alertsCount, expenseTotalCents, expenseCount, 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [newKm, setNewKm] = useState(bike.current_km_hours.toString());
   const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState('');
 
   const handleUpdateKm = async () => {
     const parsed = parseFloat(newKm);
-    if (isNaN(parsed) || parsed < 0) return;
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      setUpdateError('Inserisci un chilometraggio valido.');
+      return;
+    }
+    setUpdateError('');
     setIsUpdating(true);
-    await updateBikeKm(bike.id, parsed);
+    const result = await updateBikeKm(bike.id, parsed);
     setIsUpdating(false);
+    if (!result.success) {
+      setUpdateError(result.error || 'Aggiornamento non riuscito. Riprova.');
+      return;
+    }
     setIsEditOpen(false);
   };
 
@@ -104,15 +113,15 @@ export function StatCards({ bike, alertsCount, expenseTotalCents, expenseCount, 
       </div>
 
       {/* Dialog aggiornamento Chilometri / Ore */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+      <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if (open) { setNewKm(bike.current_km_hours.toString()); setUpdateError(''); } }}>
         <DialogContent className="bg-zinc-50 border-zinc-200 text-zinc-900 max-w-sm sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-zinc-900">
               <Gauge className="w-5 h-5 text-orange-700" />
-              Aggiorna Chilometri / Ore
+              Aggiorna chilometri
             </DialogTitle>
             <DialogDescription className="text-zinc-600 text-xs">
-              Inserisci la lettura attuale del contachilometri per ricalcolare tutte le scadenze.
+              Stai aggiornando <strong>{bike.name} {bike.model}</strong>. Inserisci la lettura attuale del contachilometri.
             </DialogDescription>
           </DialogHeader>
 
@@ -122,12 +131,17 @@ export function StatCards({ bike, alertsCount, expenseTotalCents, expenseCount, 
             </label>
             <Input
               type="number"
+              min="0"
+              step="1"
+              inputMode="numeric"
               value={newKm}
-              onChange={(e) => setNewKm(e.target.value)}
+              onChange={(e) => { setNewKm(e.target.value); setUpdateError(''); }}
               className="bg-white border-zinc-200 text-lg font-mono text-zinc-900 h-12"
               placeholder="es. 14500"
             />
           </div>
+
+          {updateError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{updateError}</p>}
 
           <DialogFooter className="flex-row gap-2 justify-end">
             <Button
@@ -139,7 +153,7 @@ export function StatCards({ bike, alertsCount, expenseTotalCents, expenseCount, 
             </Button>
             <Button
               onClick={handleUpdateKm}
-              disabled={isUpdating}
+              disabled={isUpdating || newKm.trim() === ''}
               className="bg-orange-600 hover:bg-orange-500 text-white flex-1 font-semibold"
             >
               {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva'}

@@ -308,15 +308,20 @@ export async function deleteBike(bikeId: string): Promise<{ success: boolean; er
 }
 
 export async function updateBikeKm(bikeId: string, km: number): Promise<{ success: boolean; error?: string }> {
+  if (!bikeId || !Number.isFinite(km) || km < 0) {
+    return { success: false, error: 'Veicolo o chilometraggio non valido.' };
+  }
   try {
     const supabase = await createClient();
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('bikes')
       .update({ current_km_hours: km })
-      .eq('id', bikeId);
+      .eq('id', bikeId)
+      .select('id')
+      .single();
 
-    if (error) {
-      return { success: false, error: error.message };
+    if (error || !data) {
+      return { success: false, error: error?.message || 'Veicolo non trovato.' };
     }
 
     revalidatePath('/', 'layout');
