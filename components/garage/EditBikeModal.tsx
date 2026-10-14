@@ -238,14 +238,13 @@ export function EditBikeModal({ bike, open, onOpenChange, onBikeUpdated }: EditB
             />
           </div>
 
-          {/* Vehicle preview */}
+          {/* Vehicle photo preview */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-700 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-orange-700" />
-              Anteprima del veicolo
+              Foto del veicolo
             </Label>
             <VehicleViewer
-              staticPreview
               bike={{
                 name: name || 'Veicolo',
                 vehicle_type: vehicleTypeValue,
@@ -255,8 +254,6 @@ export function EditBikeModal({ bike, open, onOpenChange, onBikeUpdated }: EditB
                 image_url: previewUrl,
               }}
               height={200}
-              showControls={false}
-              autoRotateDefault={true}
             />
           </div>
 

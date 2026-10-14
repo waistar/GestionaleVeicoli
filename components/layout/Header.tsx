@@ -17,7 +17,6 @@ import {
   Warehouse,
   ChevronDown,
   Check,
-  Sparkles,
   FileArchive,
 } from 'lucide-react';
 
@@ -65,7 +64,7 @@ export function Header({ bike, alertsCount = 0, allBikes, fleetOverview = false 
             <div
               className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shadow-lg text-white group-hover:scale-105 transition-transform"
               style={{
-                background: isFleetOverview ? 'linear-gradient(135deg, #ea580c, #18181b)' : `linear-gradient(135deg, ${bike.primary_color || '#ea580c'}, #18181b)`,
+                backgroundColor: isFleetOverview ? '#ea580c' : bike.primary_color || '#ea580c',
               }}
             >
               {isFleetOverview ? <Warehouse className="w-5 h-5" /> : <VehicleIcon bike={bike} className="w-5 h-5 sm:w-5 sm:h-5" />}
@@ -159,9 +158,8 @@ export function Header({ bike, alertsCount = 0, allBikes, fleetOverview = false 
                 <Link
                   href="/garage"
                   onClick={() => setDropdownOpen(false)}
-                  className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold shadow-md shadow-orange-600/20 active:scale-95 transition-all"
+                  className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition-colors"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
                   <span>Gestisci parco veicoli</span>
                 </Link>
               </div>
@@ -243,17 +241,17 @@ export function Header({ bike, alertsCount = 0, allBikes, fleetOverview = false 
           </div>
 
           {/* Primary deadline action */}
-          <Link
-            href={isFleetOverview ? '/promemoria?new=1' : `/promemoria?new=1&vehicle=${bike.id}`}
+          {!isFleetOverview && <Link
+            href={`/promemoria?new=1&vehicle=${bike.id}`}
             className={`hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 ${
               isPromemoria
                 ? 'bg-zinc-100 text-zinc-700 border border-zinc-200'
-                : 'bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white shadow-orange-600/20'
+                : 'bg-orange-600 hover:bg-orange-700 text-white'
             }`}
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Nuova scadenza</span>
-          </Link>
+          </Link>}
         </div>
       </div>
     </header>

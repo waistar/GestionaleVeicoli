@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { vehicleTypeLabel } from '@/lib/vehicle-catalog';
-import { VehicleIcon } from './VehicleViewer';
+import { VehiclePhoto } from './VehicleViewer';
 import { AddBikeModal } from './AddBikeModal';
 import { EditBikeModal } from './EditBikeModal';
 import { DeleteBikeModal } from './DeleteBikeModal';
@@ -57,7 +57,7 @@ export function GarageFleetView({ bikes: initialBikes, activeBikeId: initialActi
           <h2 className="text-base sm:text-lg font-bold text-zinc-900">Veicoli registrati ({bikes.length})</h2>
           <p className="text-xs text-zinc-600 mt-1">Seleziona il veicolo da gestire oppure apri direttamente le sue scadenze.</p>
         </div>
-        <Button onClick={() => setIsAddOpen(true)} className="min-h-11 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold px-4 rounded-xl shadow-md shadow-orange-600/20">
+        <Button onClick={() => setIsAddOpen(true)} className="min-h-11 bg-orange-600 hover:bg-orange-700 text-white font-bold px-4 rounded-xl">
           <Plus className="w-4 h-4" /> Aggiungi veicolo
         </Button>
       </div>
@@ -66,19 +66,10 @@ export function GarageFleetView({ bikes: initialBikes, activeBikeId: initialActi
         {bikes.map(bike => {
           const isActive = bike.id === activeBikeId;
           return (
-            <Card key={bike.id} className={`p-4 rounded-2xl border shadow-sm ${isActive ? 'bg-orange-50/50 border-orange-300 ring-1 ring-orange-200' : 'bg-white border-zinc-200'}`}>
+            <Card key={bike.id} className={`p-4 rounded-2xl border ${isActive ? 'bg-orange-50/50 border-orange-300' : 'bg-white border-zinc-200'}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-zinc-200 bg-white flex items-center justify-center">
-                    {bike.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={bike.image_url} alt={`${bike.name} ${bike.model}`} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white" style={{ background: `linear-gradient(135deg, ${bike.primary_color || '#ea580c'}, #18181b)` }}>
-                        <VehicleIcon bike={bike} className="w-7 h-7" />
-                      </div>
-                    )}
-                  </div>
+                  <VehiclePhoto bike={bike} className="w-14 h-14 rounded-xl shrink-0 border border-zinc-200" />
                   <div className="min-w-0">
                     <h3 className="font-bold text-zinc-900 truncate">{bike.name}</h3>
                     <p className="text-sm text-zinc-600 truncate">{bike.model}{bike.year ? ` · ${bike.year}` : ''}</p>

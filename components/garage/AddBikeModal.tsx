@@ -277,18 +277,17 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
             />
           </div>
 
-          {/* SECTION 2: VEHICLE PREVIEW */}
+          {/* SECTION 2: VEHICLE PHOTO PREVIEW */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-700 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-orange-700" />
-                2. Anteprima del veicolo
+                2. Foto del veicolo
               </span>
               <span className="text-[10px] text-orange-700 font-mono">Scheda veicolo</span>
             </Label>
 
             <VehicleViewer
-              staticPreview
               bike={{
                 name: name || 'Nuovo veicolo',
                 vehicle_type: vehicleTypeValue,
@@ -298,8 +297,6 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
                 image_url: previewUrl,
               }}
               height={220}
-              showControls={false}
-              autoRotateDefault={true}
             />
           </div>
 

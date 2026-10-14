@@ -3,7 +3,7 @@ import { getAllBikes } from '@/app/actions/bikes';
 import { createClient } from '@/lib/supabase/server';
 import { MaintenanceLog, VehicleReminder } from '@/lib/supabase/types';
 import { calculateReminders, formatKm, reminderRemaining, reminderTarget, sortReminders } from '@/lib/reminders';
-import { vehicleTypeLabel } from '@/lib/vehicle-catalog';
+import { vehicleType, vehicleTypeLabel } from '@/lib/vehicle-catalog';
 import { EmptyGarage } from '@/components/garage/EmptyGarage';
 import { VehicleBrandLogo } from '@/components/garage/VehicleBrandLogo';
 import { Header } from '@/components/layout/Header';
@@ -40,12 +40,17 @@ export default async function FleetDashboardPage() {
   const warningCount = reminders.filter(reminder => reminder.status === 'warning').length;
   const alertsCount = expiredCount + warningCount;
   const activeVehicle = fleet.bikes.find(vehicle => vehicle.id === fleet.activeBikeId) || fleet.bikes[0];
+  const typePriority = { auto: 0, furgone: 1, moto: 2, scooter: 3 } as const;
+  const dashboardVehicles = fleet.bikes
+    .map((vehicle, index) => ({ vehicle, index }))
+    .sort((a, b) => typePriority[vehicleType(a.vehicle)] - typePriority[vehicleType(b.vehicle)] || a.index - b.index)
+    .map(({ vehicle }) => vehicle);
 
   return <>
-    <Header bike={activeVehicle} alertsCount={alertsCount} allBikes={fleet.bikes} />
+    <Header bike={activeVehicle} alertsCount={alertsCount} allBikes={dashboardVehicles} />
     <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-24 space-y-7">
-      <section className="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-        <div><p className="text-xs font-semibold uppercase tracking-wider text-orange-700">GestionaleVeicoli · panoramica generale</p><h1 className="mt-1 text-2xl sm:text-3xl font-bold text-zinc-900">Tutte le scadenze del parco veicoli</h1><p className="mt-2 text-sm text-zinc-600">Controlla le priorità generali, poi apri il singolo mezzo per gestirne dettagli, chilometri e spese.</p></div>
+      <section className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div><h1 className="text-2xl sm:text-3xl font-bold text-zinc-900">Panoramica veicoli</h1><p className="mt-1 text-sm text-zinc-600">Scadenze, chilometri e spese del parco veicoli.</p></div>
         <div className="flex flex-wrap gap-2 shrink-0"><Link href="/garage" className="min-h-11 inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-800"><Warehouse className="w-4 h-4" />Gestisci veicoli</Link><Link href="/promemoria?new=1" className="min-h-11 inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 text-sm font-semibold text-white"><Plus className="w-4 h-4" />Nuova scadenza</Link></div>
       </section>
 
@@ -62,10 +67,10 @@ export default async function FleetDashboardPage() {
       <section className="space-y-4">
         <div className="flex items-end justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wider text-orange-700">Accesso rapido</p><h2 className="text-xl font-bold text-zinc-900">Veicoli</h2></div><Link href="/garage" className="text-sm font-semibold text-orange-700">Parco veicoli →</Link></div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {fleet.bikes.map(vehicle => {
+          {dashboardVehicles.map(vehicle => {
             const vehicleReminders = reminders.filter(reminder => reminder.bikeId === vehicle.id);
             const vehicleAlerts = vehicleReminders.filter(reminder => reminder.status !== 'ok').length;
-            return <Link key={vehicle.id} href={`/veicoli/${vehicle.id}`} className="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm hover:border-orange-300 hover:shadow-md transition-all">
+            return <Link key={vehicle.id} href={`/veicoli/${vehicle.id}`} className="group rounded-2xl border border-zinc-200 bg-white p-4 hover:border-orange-300 transition-colors">
               <div className="flex items-start gap-4"><VehicleBrandLogo vehicle={vehicle} /><div className="min-w-0 flex-1"><p className="text-xs text-zinc-500">{vehicleTypeLabel(vehicle)}{vehicle.plate ? ` · ${vehicle.plate}` : ''}</p><h3 className="font-bold text-zinc-900 truncate">{vehicle.name} {vehicle.model}</h3><p className="mt-1 text-xs text-zinc-600">{formatKm(vehicle.current_km_hours)}</p></div><ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-orange-700 transition-colors" /></div>
               <div className="mt-4 grid grid-cols-2 gap-2 border-t border-zinc-100 pt-3 text-xs"><div><p className="text-zinc-500">Scadenze</p><p className="font-semibold text-zinc-900">{vehicleReminders.length}</p></div><div><p className="text-zinc-500">Da gestire</p><p className={`font-semibold ${vehicleAlerts ? 'text-amber-700' : 'text-emerald-700'}`}>{vehicleAlerts}</p></div></div>
             </Link>;

@@ -36,7 +36,7 @@ export default async function GaragePage() {
           </div>
         </div>
 
-        {/* Garage Fleet View with 3D Showroom & Card Grid */}
+        {/* Vehicle cards */}
         <GarageFleetView bikes={bikes} activeBikeId={activeBikeId} />
       </main>
 
