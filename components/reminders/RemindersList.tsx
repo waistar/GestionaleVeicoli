@@ -28,53 +28,53 @@ export function RemindersList({ reminders }: RemindersListProps) {
   return (
     <div className="space-y-4 pb-16">
       {/* 1. Status Counter Cards */}
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:gap-5">
-        <div className="bg-rose-950/30 border border-rose-500/40 p-3 sm:p-5 rounded-2xl flex flex-col justify-between shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold text-rose-400 uppercase tracking-wider">Scaduti</span>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400">
-              <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+      <div className="grid grid-cols-3 gap-2 xs:gap-2.5 sm:gap-4 md:gap-5">
+        <div className="bg-rose-950/30 border border-rose-500/40 p-2.5 xs:p-3 sm:p-5 rounded-2xl flex flex-col justify-between shadow-sm min-w-0">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[10px] xs:text-[11px] sm:text-xs font-bold text-rose-400 uppercase tracking-wider truncate">Scaduti</span>
+            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400 shrink-0">
+              <AlertCircle className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="mt-1 sm:mt-2">
-            <span className="text-xl sm:text-3xl font-mono font-bold text-rose-300 block">
+          <div className="mt-1 sm:mt-2 min-w-0">
+            <span className="text-base xs:text-xl sm:text-3xl font-mono font-bold text-rose-300 block truncate">
               {expired.length}
             </span>
-            <span className="hidden sm:block text-[11px] text-rose-400/80 mt-0.5">
+            <span className="hidden sm:block text-[11px] text-rose-400/80 mt-0.5 truncate">
               Oltre il chilometraggio
             </span>
           </div>
         </div>
 
-        <div className="bg-amber-950/30 border border-amber-500/40 p-3 sm:p-5 rounded-2xl flex flex-col justify-between shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider">In Scadenza</span>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
-              <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        <div className="bg-amber-950/30 border border-amber-500/40 p-2.5 xs:p-3 sm:p-5 rounded-2xl flex flex-col justify-between shadow-sm min-w-0">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[10px] xs:text-[11px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider truncate">In Scadenza</span>
+            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400 shrink-0">
+              <AlertTriangle className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="mt-1 sm:mt-2">
-            <span className="text-xl sm:text-3xl font-mono font-bold text-amber-300 block">
+          <div className="mt-1 sm:mt-2 min-w-0">
+            <span className="text-base xs:text-xl sm:text-3xl font-mono font-bold text-amber-300 block truncate">
               {warning.length}
             </span>
-            <span className="hidden sm:block text-[11px] text-amber-400/80 mt-0.5">
+            <span className="hidden sm:block text-[11px] text-amber-400/80 mt-0.5 truncate">
               Entro 500 km
             </span>
           </div>
         </div>
 
-        <div className="bg-emerald-950/30 border border-emerald-500/40 p-3 sm:p-5 rounded-2xl flex flex-col justify-between shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold text-emerald-400 uppercase tracking-wider">Regolari</span>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-              <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        <div className="bg-emerald-950/30 border border-emerald-500/40 p-2.5 xs:p-3 sm:p-5 rounded-2xl flex flex-col justify-between shadow-sm min-w-0">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[10px] xs:text-[11px] sm:text-xs font-bold text-emerald-400 uppercase tracking-wider truncate">Regolari</span>
+            <div className="w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+              <CheckCircle2 className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="mt-1 sm:mt-2">
-            <span className="text-xl sm:text-3xl font-mono font-bold text-emerald-300 block">
+          <div className="mt-1 sm:mt-2 min-w-0">
+            <span className="text-base xs:text-xl sm:text-3xl font-mono font-bold text-emerald-300 block truncate">
               {ok.length}
             </span>
-            <span className="hidden sm:block text-[11px] text-emerald-400/80 mt-0.5">
+            <span className="hidden sm:block text-[11px] text-emerald-400/80 mt-0.5 truncate">
               Intervalli regolari
             </span>
           </div>
@@ -172,15 +172,15 @@ export function RemindersList({ reminders }: RemindersListProps) {
                 </div>
 
                 {/* Footer status distance & action */}
-                <div className="mt-4 pt-3.5 border-t border-zinc-800/80 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 font-mono text-xs sm:text-sm">
-                    <Gauge className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400" />
+                <div className="mt-4 pt-3.5 border-t border-zinc-800/80 flex flex-col xs:flex-row xs:items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-1.5 font-mono text-xs sm:text-sm min-w-0">
+                    <Gauge className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400 shrink-0" />
                     {isExpired ? (
-                      <span className="text-rose-400 font-bold">
+                      <span className="text-rose-400 font-bold truncate">
                         Superato da {formatKm(Math.abs(item.kmRemaining))}
                       </span>
                     ) : (
-                      <span className={isWarning ? 'text-amber-400 font-bold' : 'text-zinc-300'}>
+                      <span className={`truncate ${isWarning ? 'text-amber-400 font-bold' : 'text-zinc-300'}`}>
                         Mancano {formatKm(item.kmRemaining)}
                       </span>
                     )}
@@ -188,7 +188,7 @@ export function RemindersList({ reminders }: RemindersListProps) {
 
                   <Link
                     href={`/interventi/nuovo`}
-                    className="text-xs sm:text-sm font-semibold px-3.5 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white flex items-center gap-1 shadow-sm active:scale-95 transition-all shrink-0"
+                    className="text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white flex items-center justify-center gap-1 shadow-sm active:scale-95 transition-all shrink-0 self-stretch xs:self-auto"
                   >
                     <Wrench className="w-3.5 h-3.5" /> Registra Fatto
                   </Link>

@@ -182,12 +182,12 @@ export function DashboardRemindersWidget({
             <span className="font-semibold text-zinc-200 block mt-0.5">{bike.year || 'N/D'}</span>
           </div>
 
-          <div className="bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-800 col-span-2 flex items-center justify-between">
+          <div className="bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-800 col-span-2 flex flex-col xs:flex-row xs:items-center justify-between gap-2">
             <div>
               <span className="text-[10px] text-zinc-400 uppercase block font-medium">Contachilometri</span>
               <span className="font-mono font-bold text-zinc-100 text-sm">{formatKm(bike.current_km_hours)}</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 self-start xs:self-auto">
               <Link
                 href="/garage"
                 className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-semibold transition-colors"

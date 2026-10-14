@@ -19,7 +19,7 @@ export default async function NuovoInterventoPage() {
     <>
       <Header bike={bike} alertsCount={stats.alertsTotal} allBikes={bikes} />
 
-      <main className="flex-1 max-w-md md:max-w-5xl lg:max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 md:pt-6 pb-20 md:pb-10">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-3.5 sm:pt-6 pb-24 md:pb-10">
         <div className="flex items-center gap-3 mb-4 sm:mb-6">
           <Link
             href="/interventi"

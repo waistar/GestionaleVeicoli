@@ -57,9 +57,9 @@ export function MaintenanceDetailDialog({
   return (
     <>
       <Dialog open={isOpen && !isPhotoZoomed} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100 max-w-sm sm:max-w-lg md:max-w-xl rounded-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100 w-[calc(100%-1.5rem)] sm:w-full max-w-lg md:max-w-xl rounded-2xl max-h-[90vh] overflow-y-auto p-3.5 sm:p-6">
           <DialogHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <Badge variant="outline" className="bg-orange-500/10 border-orange-500/30 text-orange-400 font-semibold px-2.5 py-1">
                 {log.category}
               </Badge>
@@ -74,21 +74,21 @@ export function MaintenanceDetailDialog({
           </DialogHeader>
 
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 my-2 sm:my-3">
-            <div className="bg-zinc-950/70 p-3 sm:p-3.5 rounded-xl border border-zinc-800">
-              <span className="text-[10px] sm:text-xs text-zinc-400 uppercase font-medium flex items-center gap-1">
-                <Gauge className="w-3.5 h-3.5 text-orange-400" /> Orometro / Km
+          <div className="grid grid-cols-2 gap-2 xs:gap-2.5 sm:gap-3 my-2 sm:my-3">
+            <div className="bg-zinc-950/70 p-2.5 xs:p-3 sm:p-3.5 rounded-xl border border-zinc-800 min-w-0">
+              <span className="text-[10px] sm:text-xs text-zinc-400 uppercase font-medium flex items-center gap-1 truncate">
+                <Gauge className="w-3.5 h-3.5 text-orange-400 shrink-0" /> Orometro / Km
               </span>
-              <span className="text-sm sm:text-lg font-mono font-bold text-zinc-200 mt-1 block">
+              <span className="text-xs xs:text-sm sm:text-lg font-mono font-bold text-zinc-200 mt-1 block truncate">
                 {formatKm(log.km_hours)}
               </span>
             </div>
 
-            <div className="bg-zinc-950/70 p-3 sm:p-3.5 rounded-xl border border-zinc-800">
-              <span className="text-[10px] sm:text-xs text-zinc-400 uppercase font-medium flex items-center gap-1">
-                <CircleDollarSign className="w-3.5 h-3.5 text-emerald-400" /> Spesa Sostenuta
+            <div className="bg-zinc-950/70 p-2.5 xs:p-3 sm:p-3.5 rounded-xl border border-zinc-800 min-w-0">
+              <span className="text-[10px] sm:text-xs text-zinc-400 uppercase font-medium flex items-center gap-1 truncate">
+                <CircleDollarSign className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> Spesa Sostenuta
               </span>
-              <span className="text-sm sm:text-lg font-mono font-bold text-emerald-400 mt-1 block">
+              <span className="text-xs xs:text-sm sm:text-lg font-mono font-bold text-emerald-400 mt-1 block truncate">
                 {formatCurrency(log.cost)}
               </span>
             </div>

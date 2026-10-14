@@ -790,36 +790,37 @@ export function Motorcycle3DViewer({
       )}
 
       {/* Top Overlay Badge & Header Info */}
-      <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
-        <div className="flex items-center gap-2 bg-zinc-950/85 backdrop-blur-md px-3 py-1.5 rounded-xl border border-zinc-800/90 shadow-md pointer-events-auto">
+      <div className="absolute top-2.5 xs:top-3 left-2.5 xs:left-3 right-2.5 xs:right-3 flex items-center justify-between gap-1.5 xs:gap-2 pointer-events-none z-10">
+        <div className="flex items-center gap-1.5 xs:gap-2 bg-zinc-950/85 backdrop-blur-md px-2.5 xs:px-3 py-1 xs:py-1.5 rounded-xl border border-zinc-800/90 shadow-md pointer-events-auto max-w-[70%] sm:max-w-none min-w-0">
           <div
-            className="w-3.5 h-3.5 rounded-full ring-2 ring-zinc-800 shadow-inner"
+            className="w-3 h-3 xs:w-3.5 xs:h-3.5 rounded-full ring-2 ring-zinc-800 shadow-inner shrink-0"
             style={{ backgroundColor: primaryColor }}
             title={`Colore livrea: ${primaryColor}`}
           />
-          <span className="text-xs font-bold text-zinc-100 tracking-tight">
+          <span className="text-[11px] xs:text-xs font-bold text-zinc-100 tracking-tight truncate">
             {bike.name || 'Modello 3D Moto'}
           </span>
-          <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-zinc-800/90 text-orange-400 font-bold border border-zinc-700/80">
+          <span className="text-[9px] xs:text-[10px] uppercase font-mono px-1.5 xs:px-2 py-0.5 rounded-md bg-zinc-800/90 text-orange-400 font-bold border border-zinc-700/80 shrink-0">
             {category}
           </span>
         </div>
 
         {/* 3D Interactive Badge */}
-        <div className="flex items-center gap-1.5 bg-zinc-950/85 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-zinc-800 text-[11px] text-zinc-300 font-semibold pointer-events-auto shadow-md">
-          <Sparkles className="w-3.5 h-3.5 text-orange-400 animate-pulse" />
+        <div className="flex items-center gap-1 xs:gap-1.5 bg-zinc-950/85 backdrop-blur-md px-2 xs:px-2.5 py-1 xs:py-1.5 rounded-xl border border-zinc-800 text-[10px] xs:text-[11px] text-zinc-300 font-semibold pointer-events-auto shadow-md shrink-0">
+          <Sparkles className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-orange-400 animate-pulse shrink-0" />
           <span className="hidden sm:inline">3D Studio Showroom</span>
+          <span className="sm:hidden font-mono">3D</span>
         </div>
       </div>
 
       {/* Selected Component Inspection Chip */}
       {selectedPart && (
-        <div className="absolute top-14 left-3 bg-zinc-950/90 backdrop-blur-md border border-orange-500/50 text-orange-300 text-xs px-3 py-1.5 rounded-xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 z-10">
+        <div className="absolute top-12 xs:top-14 left-2.5 xs:left-3 max-w-[calc(100%-1.5rem)] bg-zinc-950/90 backdrop-blur-md border border-orange-500/50 text-orange-300 text-xs px-2.5 xs:px-3 py-1 xs:py-1.5 rounded-xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 z-10">
           <Info className="w-3.5 h-3.5 text-orange-400 shrink-0" />
-          <span className="font-semibold text-zinc-100">{selectedPart}</span>
+          <span className="font-semibold text-zinc-100 truncate">{selectedPart}</span>
           <button
             onClick={() => setSelectedPart(null)}
-            className="text-orange-400 hover:text-white ml-1 text-xs font-bold px-1"
+            className="text-orange-400 hover:text-white ml-1 text-xs font-bold px-1 shrink-0"
           >
             ✕
           </button>
@@ -834,9 +835,9 @@ export function Motorcycle3DViewer({
 
       {/* Bottom Floating Control Toolbar */}
       {showControls && (
-        <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-zinc-950/90 backdrop-blur-md p-1.5 rounded-2xl border border-zinc-800/90 shadow-2xl z-10">
+        <div className="absolute bottom-2.5 xs:bottom-3 right-2.5 xs:right-3 flex items-center gap-1 xs:gap-1.5 bg-zinc-950/90 backdrop-blur-md p-1 xs:p-1.5 rounded-2xl border border-zinc-800/90 shadow-2xl z-10 max-w-[calc(100%-1.25rem)] overflow-x-auto no-scrollbar">
           {/* Camera Presets Menu */}
-          <div className="hidden sm:flex items-center gap-1 border-r border-zinc-800 pr-1.5 mr-0.5">
+          <div className="hidden sm:flex items-center gap-1 border-r border-zinc-800 pr-1.5 mr-0.5 shrink-0">
             <button
               onClick={() => setCameraPreset('threeQuarter')}
               title="Vista 3/4 Showroom"
@@ -886,7 +887,7 @@ export function Motorcycle3DViewer({
           {/* Auto Rotate Toggle */}
           <button
             onClick={() => setIsAutoRotating(!isAutoRotating)}
-            className={`p-2 rounded-xl text-xs transition-all ${
+            className={`p-1.5 xs:p-2 rounded-xl text-xs transition-all shrink-0 ${
               isAutoRotating
                 ? 'bg-orange-600/30 text-orange-400 border border-orange-500/30 shadow-sm'
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
@@ -902,7 +903,7 @@ export function Motorcycle3DViewer({
             onClick={() => {
               cameraDistance.current = Math.max(2.4, cameraDistance.current - 0.4);
             }}
-            className="p-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+            className="p-1.5 xs:p-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors shrink-0"
             title="Ingrandisci zoom"
             aria-label="Zoom in"
           >
@@ -914,7 +915,7 @@ export function Motorcycle3DViewer({
             onClick={() => {
               cameraDistance.current = Math.min(7.5, cameraDistance.current + 0.4);
             }}
-            className="p-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+            className="p-1.5 xs:p-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors shrink-0"
             title="Riduci zoom"
             aria-label="Zoom out"
           >
@@ -924,7 +925,7 @@ export function Motorcycle3DViewer({
           {/* Reset Camera */}
           <button
             onClick={resetCamera}
-            className="p-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+            className="p-1.5 xs:p-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors shrink-0"
             title="Ripristina visuale 3/4"
             aria-label="Reset visuale"
           >
@@ -934,7 +935,7 @@ export function Motorcycle3DViewer({
           {/* Fullscreen Toggle */}
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+            className="p-1.5 xs:p-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors shrink-0"
             title={isFullscreen ? 'Riduci finestra' : 'Visualizza a schermo intero'}
             aria-label="Toggle schermo intero"
           >

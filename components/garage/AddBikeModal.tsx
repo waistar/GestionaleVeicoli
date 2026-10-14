@@ -159,7 +159,7 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-full sm:max-w-xl md:max-w-2xl bg-zinc-950 border-zinc-800 text-zinc-100 p-0 overflow-hidden rounded-2xl max-h-[92vh] flex flex-col">
+      <DialogContent className="w-[calc(100%-1.5rem)] sm:w-full max-w-xl md:max-w-2xl bg-zinc-950 border-zinc-800 text-zinc-100 p-0 overflow-hidden rounded-2xl max-h-[92vh] flex flex-col">
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-zinc-850 bg-zinc-900/80">
           <DialogHeader>

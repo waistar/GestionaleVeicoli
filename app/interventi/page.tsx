@@ -19,8 +19,8 @@ export default async function InterventiPage() {
     <>
       <Header bike={bike} alertsCount={stats.alertsTotal} allBikes={bikes} />
 
-      <main className="flex-1 max-w-md md:max-w-5xl lg:max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 md:pt-6 pb-20 md:pb-10">
-        <div className="flex items-center justify-between mb-4 sm:mb-6 px-1">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-3.5 sm:pt-6 pb-24 md:pb-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6 px-1">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400">
@@ -35,7 +35,7 @@ export default async function InterventiPage() {
 
           <Link
             href="/interventi/nuovo"
-            className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-orange-600/20 active:scale-95 transition-all shrink-0"
+            className="self-start sm:self-auto flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-orange-600/20 active:scale-95 transition-all shrink-0"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Nuovo Intervento</span>

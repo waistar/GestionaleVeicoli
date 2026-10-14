@@ -59,9 +59,9 @@ export function RecentInterventions({ logs }: RecentInterventionsProps) {
             <Card
               key={log.id}
               onClick={() => setSelectedLog(log)}
-              className="bg-zinc-900/80 border-zinc-800 p-3.5 sm:p-4 rounded-2xl hover:border-zinc-700 hover:bg-zinc-850/60 transition-all cursor-pointer active:scale-98 shadow-sm flex items-center justify-between gap-3 group"
+              className="bg-zinc-900/80 border-zinc-800 p-3 xs:p-3.5 sm:p-4 rounded-2xl hover:border-zinc-700 hover:bg-zinc-850/60 transition-all cursor-pointer active:scale-98 shadow-sm flex items-center justify-between gap-2.5 sm:gap-3 group"
             >
-              <div className="flex items-center gap-3.5 flex-1 min-w-0">
+              <div className="flex items-center gap-2.5 xs:gap-3.5 flex-1 min-w-0">
                 {log.image_url ? (
                   <div className="hidden sm:block w-13 h-13 rounded-xl overflow-hidden shrink-0 border border-zinc-800 bg-zinc-950">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -74,7 +74,7 @@ export function RecentInterventions({ logs }: RecentInterventionsProps) {
                 ) : null}
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <Badge variant="outline" className="bg-zinc-800 border-zinc-700 text-orange-400 text-[10px] font-semibold px-2 py-0.5">
                       {log.category}
                     </Badge>
@@ -88,7 +88,7 @@ export function RecentInterventions({ logs }: RecentInterventionsProps) {
                     {log.description}
                   </p>
 
-                  <div className="flex items-center gap-3 mt-1.5 text-[11px] sm:text-xs text-zinc-400 font-mono">
+                  <div className="flex items-center gap-2 xs:gap-3 mt-1.5 text-[11px] sm:text-xs text-zinc-400 font-mono flex-wrap">
                     <span>{formatKm(log.km_hours)}</span>
                     <span>•</span>
                     <span className="font-semibold text-emerald-400">{formatCurrency(log.cost)}</span>

@@ -76,7 +76,7 @@ export function AlertBanner({ reminders }: AlertBannerProps) {
           return (
             <div
               key={item.id}
-              className="flex items-center justify-between bg-zinc-950/70 rounded-xl p-2.5 sm:p-3 border border-zinc-800/80 gap-2"
+              className="flex flex-col xs:flex-row xs:items-center justify-between bg-zinc-950/70 rounded-xl p-2.5 sm:p-3 border border-zinc-800/80 gap-1.5 xs:gap-2"
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-xs font-bold text-zinc-100 truncate">{item.category}</span>

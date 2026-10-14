@@ -94,35 +94,35 @@ export function GarageFleetView({ bikes: initialBikes, activeBikeId: initialActi
     <div className="space-y-6">
       {/* 1. HERO SHOWROOM: 3D MODEL & REFERENCE PROFILE */}
       {showcasedBike && (
-        <Card className="bg-gradient-to-b from-zinc-900/90 to-zinc-950 border-zinc-800 p-4 sm:p-6 rounded-3xl shadow-xl overflow-hidden relative">
+        <Card className="bg-gradient-to-b from-zinc-900/90 to-zinc-950 border-zinc-800 p-3.5 xs:p-4 sm:p-6 rounded-2xl xs:rounded-3xl shadow-xl overflow-hidden relative">
           {/* Top Banner Actions */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-3 min-w-0">
               <div
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform shrink-0"
                 style={{
                   background: `linear-gradient(135deg, ${showcasedBike.primary_color || '#ea580c'}, #18181b)`,
                 }}
               >
                 <BikeIcon className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-lg sm:text-2xl font-bold text-zinc-100 tracking-tight">
+                  <h2 className="text-base xs:text-lg sm:text-2xl font-bold text-zinc-100 tracking-tight truncate">
                     {showcasedBike.name}
                   </h2>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-zinc-800 text-orange-400 font-mono font-semibold border border-zinc-700">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-zinc-800 text-orange-400 font-mono font-semibold border border-zinc-700 shrink-0">
                     {showcasedBike.model}
                   </span>
                   {showcasedBike.id === activeBikeId ? (
-                    <Badge className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-0.5 flex items-center gap-1 font-medium">
+                    <Badge className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-0.5 flex items-center gap-1 font-medium shrink-0">
                       <ShieldCheck className="w-3.5 h-3.5" /> Moto Attiva nel Garage
                     </Badge>
                   ) : (
                     <button
                       onClick={() => handleSelectActive(showcasedBike.id)}
                       disabled={isSwitching === showcasedBike.id}
-                      className="text-xs px-2.5 py-0.5 rounded-full bg-orange-500/15 hover:bg-orange-500/25 text-orange-400 border border-orange-500/30 font-semibold transition-all flex items-center gap-1 active:scale-95"
+                      className="text-xs px-2.5 py-0.5 rounded-full bg-orange-500/15 hover:bg-orange-500/25 text-orange-400 border border-orange-500/30 font-semibold transition-all flex items-center gap-1 active:scale-95 shrink-0"
                     >
                       {isSwitching === showcasedBike.id ? (
                         <Loader2 className="w-3 h-3 animate-spin" />
@@ -133,14 +133,14 @@ export function GarageFleetView({ bikes: initialBikes, activeBikeId: initialActi
                     </button>
                   )}
                 </div>
-                <p className="text-xs text-zinc-400 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-0.5 truncate">
                   Reference 3D interattiva generata dalla foto profilo
                 </p>
               </div>
             </div>
 
             {/* Toggle 3D Model vs Photo */}
-            <div className="flex items-center gap-1.5 bg-zinc-950 p-1 rounded-xl border border-zinc-800">
+            <div className="flex items-center gap-1.5 bg-zinc-950 p-1 rounded-xl border border-zinc-800 self-start sm:self-auto shrink-0">
               <button
                 onClick={() => setShowcaseMode('3d')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
@@ -172,12 +172,13 @@ export function GarageFleetView({ bikes: initialBikes, activeBikeId: initialActi
               <Motorcycle3DViewer
                 key={`${showcasedBike.id}_${showcasedBike.category || 'naked'}_${showcasedBike.primary_color || ''}_${showcasedBike.accent_color || ''}`}
                 bike={showcasedBike}
-                height={410}
+                className="h-[280px] xs:h-[340px] sm:h-[400px] lg:h-[460px]"
+                height="100%"
                 showControls={true}
                 autoRotateDefault={true}
               />
             ) : (
-              <div className="h-[410px] w-full relative flex items-center justify-center bg-zinc-950/90 overflow-hidden">
+              <div className="h-[280px] xs:h-[340px] sm:h-[400px] lg:h-[460px] w-full relative flex items-center justify-center bg-zinc-950/90 overflow-hidden">
                 {showcasedBike.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -209,39 +210,39 @@ export function GarageFleetView({ bikes: initialBikes, activeBikeId: initialActi
           </div>
 
           {/* Quick Specifications Strip */}
-          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-            <div className="p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 flex items-center gap-2.5">
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 xs:gap-2.5 text-xs">
+            <div className="p-2 xs:p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 flex items-center gap-2 xs:gap-2.5 min-w-0">
               <Gauge className="w-4 h-4 text-orange-400 shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <span className="text-[10px] text-zinc-400 uppercase block font-medium">Contachilometri</span>
-                <span className="font-mono font-bold text-zinc-100 text-sm">
+                <span className="font-mono font-bold text-zinc-100 text-xs xs:text-sm truncate block">
                   {formatKm(showcasedBike.current_km_hours)}
                 </span>
               </div>
             </div>
 
-            <div className="p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 flex items-center gap-2.5">
+            <div className="p-2 xs:p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 flex items-center gap-2 xs:gap-2.5 min-w-0">
               <Calendar className="w-4 h-4 text-orange-400 shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <span className="text-[10px] text-zinc-400 uppercase block font-medium">Anno</span>
-                <span className="font-semibold text-zinc-100 text-sm">
+                <span className="font-semibold text-zinc-100 text-xs xs:text-sm truncate block">
                   {showcasedBike.year || 'Non specificato'}
                 </span>
               </div>
             </div>
 
-            <div className="p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 flex items-center gap-2.5">
+            <div className="p-2 xs:p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 flex items-center gap-2 xs:gap-2.5 min-w-0">
               <Layers className="w-4 h-4 text-orange-400 shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <span className="text-[10px] text-zinc-400 uppercase block font-medium">Categoria</span>
-                <span className="font-semibold text-zinc-100 capitalize text-sm">
+                <span className="font-semibold text-zinc-100 capitalize text-xs xs:text-sm truncate block">
                   {showcasedBike.category || 'Naked'}
                 </span>
               </div>
             </div>
 
             {/* Quick Actions (Edit / Delete) */}
-            <div className="p-1.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 flex items-center justify-around gap-1">
+            <div className="p-1 xs:p-1.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 flex items-center justify-around gap-1">
               <button
                 onClick={() => {
                   setBikeToEdit(showcasedBike);
@@ -250,7 +251,7 @@ export function GarageFleetView({ bikes: initialBikes, activeBikeId: initialActi
                 className="flex-1 py-1.5 px-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold flex items-center justify-center gap-1 transition-colors"
                 title="Modifica moto"
               >
-                <Edit3 className="w-3.5 h-3.5 text-orange-400" />
+                <Edit3 className="w-3.5 h-3.5 text-orange-400 shrink-0" />
                 <span>Modifica</span>
               </button>
 
@@ -260,12 +261,12 @@ export function GarageFleetView({ bikes: initialBikes, activeBikeId: initialActi
                   setIsDeleteOpen(true);
                 }}
                 disabled={bikes.length <= 1}
-                className={`py-1.5 px-2.5 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors ${
+                className={`py-1.5 px-2.5 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors shrink-0 ${
                   bikes.length <= 1
                     ? 'text-zinc-600 cursor-not-allowed'
                     : 'bg-zinc-900 hover:bg-rose-950/50 text-rose-400'
                 }`}
-                title={bikes.length <= 1 ? 'Non puoi eliminare l\'unica moto' : 'Elimina moto'}
+                title={bikes.length <= 1 ? "Non puoi eliminare l'unica moto" : 'Elimina moto'}
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -296,7 +297,7 @@ export function GarageFleetView({ bikes: initialBikes, activeBikeId: initialActi
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
           {bikes.map((bike) => {
             const isActive = bike.id === activeBikeId;
             const isSelectedForShowcase = bike.id === selectedPreviewBikeId;

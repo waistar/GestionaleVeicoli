@@ -18,7 +18,7 @@ export default async function GaragePage() {
     <>
       <Header bike={bike} alertsCount={stats.alertsTotal} />
 
-      <main className="flex-1 max-w-md md:max-w-5xl lg:max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 md:pt-6 pb-24 md:pb-10 space-y-6">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-3.5 sm:pt-6 pb-24 md:pb-10 space-y-4 sm:space-y-6">
         {/* Page Title & Garage Intro */}
         <div className="flex items-center justify-between px-1">
           <div>

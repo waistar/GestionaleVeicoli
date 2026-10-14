@@ -134,11 +134,11 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
             <Card
               key={log.id}
               onClick={() => setSelectedLog(log)}
-              className="bg-zinc-900/80 border-zinc-800 p-4 rounded-2xl hover:border-zinc-700 hover:bg-zinc-850/60 transition-all cursor-pointer active:scale-98 shadow-sm flex items-center justify-between gap-3 group"
+              className="bg-zinc-900/80 border-zinc-800 p-3 xs:p-3.5 sm:p-4 rounded-2xl hover:border-zinc-700 hover:bg-zinc-850/60 transition-all cursor-pointer active:scale-98 shadow-sm flex items-center justify-between gap-2.5 sm:gap-3 group"
             >
-              <div className="flex items-start gap-3.5 flex-1 min-w-0">
+              <div className="flex items-start gap-2.5 xs:gap-3.5 flex-1 min-w-0">
                 {log.image_url ? (
-                  <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-zinc-800 bg-zinc-950">
+                  <div className="w-13 h-13 xs:w-14 xs:h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 border border-zinc-800 bg-zinc-950">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={log.image_url}
