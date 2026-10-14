@@ -276,7 +276,7 @@ export async function deleteBike(bikeId: string): Promise<{ success: boolean; er
       .eq('id', bikeId);
 
     if (deleteError) {
-      return { success: false, error: deleteError.message };
+      return { success: false, error: deleteError.code === '23503' ? 'Elimina prima i documenti PDF associati a questo veicolo.' : deleteError.message };
     }
 
     // If deleted bike was the active one, switch active cookie to remaining bike

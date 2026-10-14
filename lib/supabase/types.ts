@@ -102,3 +102,17 @@ export interface VehicleExpense {
   notes: string;
   created_at: string;
 }
+
+export interface VehicleDocument {
+  id: string;
+  bike_id: string;
+  title: string;
+  category: string;
+  document_date: string | null;
+  file_name: string;
+  storage_path: string;
+  mime_type: string;
+  size_bytes: number;
+  notes: string;
+  created_at: string;
+}

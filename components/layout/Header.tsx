@@ -18,6 +18,7 @@ import {
   ChevronDown,
   Check,
   Sparkles,
+  FileArchive,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -36,6 +37,7 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
   const isPromemoria = pathname === '/promemoria';
   const isGarage = pathname === '/garage';
   const isExpenses = pathname === '/spese';
+  const isDocuments = pathname === '/documenti';
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -223,6 +225,7 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
             <Wrench className="w-4 h-4" />
             <span>Storico</span>
           </Link>
+          <Link href="/documenti" aria-current={isDocuments ? 'page' : undefined} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${isDocuments ? 'bg-zinc-100 text-orange-700 shadow-sm' : 'text-zinc-600 hover:bg-zinc-100'}`}><FileArchive className="w-4 h-4" /><span>Archivio</span></Link>
           <Link href="/spese" aria-current={isExpenses ? 'page' : undefined} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${isExpenses ? 'bg-zinc-100 text-orange-700 shadow-sm' : 'text-zinc-600 hover:bg-zinc-100'}`}><Wallet className="w-4 h-4" /><span>Spese</span></Link>
         </nav>
 
