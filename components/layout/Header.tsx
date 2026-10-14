@@ -3,7 +3,7 @@ import { VehicleIcon } from '@/components/garage/VehicleViewer'
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Bike } from '@/lib/supabase/types';
 import { formatKm } from '@/lib/reminders';
 import { setActiveBike } from '@/app/actions/bikes';
@@ -28,7 +28,6 @@ interface HeaderProps {
 
 export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -48,12 +47,9 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleQuickSwitch = async (bikeId: string) => {
+  const handleQuickSwitch = (bikeId: string) => {
     setDropdownOpen(false);
-    if (bikeId !== bike.id) {
-      const result = await setActiveBike(bikeId);
-      if (result.success && pathname.startsWith('/veicoli/')) router.push(`/veicoli/${bikeId}`);
-    }
+    if (bikeId !== bike.id) void setActiveBike(bikeId);
   };
 
   return (
@@ -116,9 +112,9 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
                   allBikes.map((b) => {
                     const isCurrent = b.id === bike.id;
                     return (
-                      <button
+                      <Link
                         key={b.id}
-                        type="button"
+                        href={`/veicoli/${b.id}`}
                         onClick={() => handleQuickSwitch(b.id)}
                         className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition-colors ${
                           isCurrent
@@ -137,7 +133,7 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
                           </div>
                         </div>
                         {isCurrent && <Check className="w-4 h-4 text-orange-700 shrink-0" />}
-                      </button>
+                      </Link>
                     );
                   })
                 ) : (

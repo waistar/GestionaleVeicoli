@@ -5,7 +5,7 @@ import { MaintenanceLog, VehicleReminder } from '@/lib/supabase/types';
 import { calculateReminders, formatKm, reminderRemaining, reminderTarget, sortReminders } from '@/lib/reminders';
 import { vehicleTypeLabel } from '@/lib/vehicle-catalog';
 import { EmptyGarage } from '@/components/garage/EmptyGarage';
-import { VehicleIcon } from '@/components/garage/VehicleViewer';
+import { VehicleBrandLogo } from '@/components/garage/VehicleBrandLogo';
 import { WorkspaceHeader } from '@/components/layout/WorkspaceHeader';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { CalendarClock, ChevronRight, Plus, Warehouse } from 'lucide-react';
@@ -65,7 +65,7 @@ export default async function FleetDashboardPage() {
             const vehicleReminders = reminders.filter(reminder => reminder.bikeId === vehicle.id);
             const vehicleAlerts = vehicleReminders.filter(reminder => reminder.status !== 'ok').length;
             return <Link key={vehicle.id} href={`/veicoli/${vehicle.id}`} className="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm hover:border-orange-300 hover:shadow-md transition-all">
-              <div className="flex items-start gap-4"><div className="w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0" style={{ backgroundColor: vehicle.primary_color || '#ea580c' }}><VehicleIcon bike={vehicle} className="w-6 h-6" /></div><div className="min-w-0 flex-1"><p className="text-xs text-zinc-500">{vehicleTypeLabel(vehicle)}{vehicle.plate ? ` · ${vehicle.plate}` : ''}</p><h3 className="font-bold text-zinc-900 truncate">{vehicle.name} {vehicle.model}</h3><p className="mt-1 text-xs text-zinc-600">{formatKm(vehicle.current_km_hours)}</p></div><ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-orange-700 transition-colors" /></div>
+              <div className="flex items-start gap-4"><VehicleBrandLogo vehicle={vehicle} /><div className="min-w-0 flex-1"><p className="text-xs text-zinc-500">{vehicleTypeLabel(vehicle)}{vehicle.plate ? ` · ${vehicle.plate}` : ''}</p><h3 className="font-bold text-zinc-900 truncate">{vehicle.name} {vehicle.model}</h3><p className="mt-1 text-xs text-zinc-600">{formatKm(vehicle.current_km_hours)}</p></div><ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-orange-700 transition-colors" /></div>
               <div className="mt-4 grid grid-cols-2 gap-2 border-t border-zinc-100 pt-3 text-xs"><div><p className="text-zinc-500">Scadenze</p><p className="font-semibold text-zinc-900">{vehicleReminders.length}</p></div><div><p className="text-zinc-500">Da gestire</p><p className={`font-semibold ${vehicleAlerts ? 'text-amber-700' : 'text-emerald-700'}`}>{vehicleAlerts}</p></div></div>
             </Link>;
           })}

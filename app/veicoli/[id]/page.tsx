@@ -1,9 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getMainData } from '@/app/actions/maintenance';
 import { getAllBikes } from '@/app/actions/bikes';
-import { getExpenses } from '@/app/actions/expenses';
+import { createClient } from '@/lib/supabase/server';
+import type { MaintenanceLog, VehicleExpense, VehicleReminder } from '@/lib/supabase/types';
 import { calculateStats } from '@/lib/reminders';
 import { summarizeExpenses } from '@/lib/expenses';
 import { Header } from '@/components/layout/Header';
@@ -19,14 +19,36 @@ export const dynamic = 'force-dynamic';
 
 export default async function VehicleDashboardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [fleet, mainData, expenseData] = await Promise.all([getAllBikes(), getMainData(id), getExpenses()]);
-  if (!fleet.bikes.some(vehicle => vehicle.id === id)) notFound();
-  const { bike, logs, scheduled, isFallback, error } = mainData;
+  const fleet = await getAllBikes();
+  const bike = fleet.bikes.find(vehicle => vehicle.id === id);
   if (!bike) notFound();
+
+  let logs: MaintenanceLog[] = [];
+  let scheduled: VehicleReminder[] = [];
+  let vehicleExpenses: VehicleExpense[] = [];
+  let error = fleet.error;
+  let expenseError = '';
+  try {
+    const db = await createClient();
+    const [history, plans, expenses] = await Promise.all([
+      db.from('maintenance_logs').select('*').eq('bike_id', id).order('date', { ascending: false }),
+      db.from('vehicle_reminders').select('*').eq('bike_id', id),
+      db.from('vehicle_expenses').select('*').eq('vehicle_ref', id).order('date', { ascending: false }),
+    ]);
+    logs = (history.data || []) as MaintenanceLog[];
+    scheduled = (plans.data || []) as VehicleReminder[];
+    vehicleExpenses = (expenses.data || []) as VehicleExpense[];
+    error = error || history.error?.message || plans.error?.message;
+    expenseError = expenses.error?.message || '';
+  } catch (loadError) {
+    error = loadError instanceof Error ? loadError.message : 'Impossibile caricare i dati del veicolo.';
+    expenseError = error;
+  }
+
+  const isFallback = fleet.isFallback;
   const stats = calculateStats(bike, logs, scheduled);
-  const vehicleExpenses = expenseData.expenses.filter(expense => expense.vehicle_ref === bike.id);
   let expenseTotalCents = 0;
-  let expensesUnavailable = Boolean(expenseData.error);
+  let expensesUnavailable = Boolean(expenseError);
   if (!expensesUnavailable) {
     try { expenseTotalCents = summarizeExpenses(vehicleExpenses, fleet.bikes).total; }
     catch { expensesUnavailable = true; }

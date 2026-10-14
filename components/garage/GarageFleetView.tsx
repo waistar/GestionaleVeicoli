@@ -13,7 +13,7 @@ import { AddBikeModal } from './AddBikeModal';
 import { EditBikeModal } from './EditBikeModal';
 import { DeleteBikeModal } from './DeleteBikeModal';
 import { setActiveBike } from '@/app/actions/bikes';
-import { Bell, CheckCircle2, Edit3, Gauge, Loader2, Plus, Trash2 } from 'lucide-react';
+import { Bell, Edit3, Gauge, LayoutDashboard, Plus, Trash2 } from 'lucide-react';
 
 interface GarageFleetViewProps {
   bikes: Bike[];
@@ -28,16 +28,9 @@ export function GarageFleetView({ bikes: initialBikes, activeBikeId: initialActi
   const [bikeToEdit, setBikeToEdit] = useState<Bike | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [bikeToDelete, setBikeToDelete] = useState<Bike | null>(null);
-  const [isSwitching, setIsSwitching] = useState<string | null>(null);
-
-  const handleSelectActive = async (bikeId: string) => {
-    setIsSwitching(bikeId);
-    try {
-      const result = await setActiveBike(bikeId);
-      if (result.success) setActiveBikeId(bikeId);
-    } finally {
-      setIsSwitching(null);
-    }
+  const handleSelectActive = (bikeId: string) => {
+    setActiveBikeId(bikeId);
+    void setActiveBike(bikeId);
   };
 
   const handleBikeCreated = (newBike: Bike) => {
@@ -106,13 +99,9 @@ export function GarageFleetView({ bikes: initialBikes, activeBikeId: initialActi
                 <Link href={`/promemoria?vehicle=${bike.id}`} className="min-h-11 inline-flex items-center justify-center gap-1.5 rounded-xl bg-orange-600 px-3 text-sm font-semibold text-white">
                   <Bell className="w-4 h-4" /> Scadenze
                 </Link>
-                {isActive ? (
-                  <span className="min-h-11 inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700"><CheckCircle2 className="w-4 h-4" />In gestione</span>
-                ) : (
-                  <button type="button" onClick={() => handleSelectActive(bike.id)} disabled={isSwitching === bike.id} className="min-h-11 inline-flex items-center justify-center gap-1.5 rounded-xl border border-zinc-300 bg-white px-3 text-sm font-semibold text-zinc-800 disabled:opacity-50">
-                    {isSwitching === bike.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Seleziona
-                  </button>
-                )}
+                <Link href={`/veicoli/${bike.id}`} onClick={() => handleSelectActive(bike.id)} className="min-h-11 inline-flex items-center justify-center gap-1.5 rounded-xl border border-zinc-300 bg-white px-3 text-sm font-semibold text-zinc-800 hover:border-orange-300 hover:text-orange-700">
+                  <LayoutDashboard className="w-4 h-4" /> Dashboard
+                </Link>
               </div>
 
               <div className="mt-3 flex justify-end gap-1 border-t border-zinc-100 pt-3">
