@@ -23,6 +23,10 @@ export function maintenanceCostCents(value: MaintenanceLog['cost']) {
   return cents;
 }
 
+export function isExtraordinaryMaintenance(log: MaintenanceLog) {
+  return maintenanceCostCents(log.cost) > 0;
+}
+
 export function summarizeAnnualVehicleCosts(
   year: number,
   reminders: VehicleReminder[],

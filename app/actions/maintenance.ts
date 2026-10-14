@@ -37,11 +37,8 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
     const kmHours = parseFloat(formData.get('km_hours') as string);
     const category = formData.get('category') as string;
     const description = (formData.get('description') as string) || '';
-    const nextDueRaw = formData.get('next_due_km_hours') as string;
-    const nextDue = nextDueRaw && nextDueRaw.trim() !== '' ? parseFloat(nextDueRaw) : null;
-    const extraordinary = formData.get('extraordinary') === 'true';
     const costRaw = String(formData.get('cost') || '').trim();
-    const parsedCost = costRaw ? amountSchema.safeParse(costRaw) : null;
+    const parsedCost = amountSchema.safeParse(costRaw);
 
     if (!bikeId) {
       return { success: false, error: 'ID Moto non specificato.' };
@@ -55,11 +52,8 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
     if (!description.trim()) {
       return { success: false, error: 'Descrizione dell\'intervento obbligatoria.' };
     }
-    if (parsedCost && !parsedCost.success) {
-      return { success: false, error: parsedCost.error.issues[0].message };
-    }
-    if (extraordinary && !parsedCost?.success) {
-      return { success: false, error: 'Inserisci il costo dell’intervento straordinario.' };
+    if (!parsedCost.success) {
+      return { success: false, error: costRaw ? parsedCost.error.issues[0].message : 'Inserisci il costo dell’intervento straordinario.' };
     }
 
     let imageUrl: string | null = null;
@@ -104,9 +98,9 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
         km_hours: kmHours,
         category,
         description,
-        cost: extraordinary && parsedCost?.success ? parsedCost.data / 100 : 0,
+        cost: parsedCost.data / 100,
         image_url: imageUrl,
-        next_due_km_hours: nextDue,
+        next_due_km_hours: null,
       })
       .select()
       .single();
@@ -137,6 +131,7 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
     revalidatePath('/garage');
     revalidatePath('/interventi');
     revalidatePath('/promemoria');
+    revalidatePath('/spese');
     revalidatePath(`/veicoli/${bikeId}`);
 
     return { success: true, id: newLog?.id };
@@ -164,6 +159,7 @@ export async function deleteMaintenanceLog(id: string): Promise<{ success: boole
     revalidatePath('/garage');
     revalidatePath('/interventi');
     revalidatePath('/promemoria');
+    revalidatePath('/spese');
     revalidatePath(`/veicoli/${data.bike_id}`);
     return { success: true };
   } catch (err: unknown) {

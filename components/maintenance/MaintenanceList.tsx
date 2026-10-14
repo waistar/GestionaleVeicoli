@@ -53,7 +53,7 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Cerca ricambi, olio, gomme, pastiglie o km..."
+          placeholder="Cerca riparazione, ricambio, costo o km..."
           className="bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-500 pl-10 pr-9 h-11 sm:h-12 rounded-xl text-sm"
         />
         {search && (
@@ -109,11 +109,11 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
       {filteredLogs.length === 0 ? (
         <Card className="bg-zinc-50/50 border-zinc-200 p-8 text-center rounded-2xl mt-4">
           <Filter className="w-8 h-8 mx-auto text-zinc-600 mb-2" />
-          <p className="text-sm font-semibold text-zinc-700">Nessun intervento trovato</p>
+          <p className="text-sm font-semibold text-zinc-700">Nessun intervento straordinario trovato</p>
           <p className="text-xs text-zinc-500 mt-1">
-            Modifica i criteri di ricerca o azzera i filtri per vedere tutti gli interventi.
+            Registra qui soltanto riparazioni e lavori non ricorrenti con il relativo costo.
           </p>
-          <button
+          {logs.length > 0 && (search || selectedCategory !== 'Tutti') && <button
             onClick={() => {
               setSearch('');
               setSelectedCategory('Tutti');
@@ -121,7 +121,7 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
             className="mt-3 text-xs text-orange-700 font-semibold hover:underline"
           >
             Azzera filtri
-          </button>
+          </button>}
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">

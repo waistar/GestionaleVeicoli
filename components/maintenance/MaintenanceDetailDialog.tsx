@@ -17,7 +17,6 @@ import { deleteMaintenanceLog } from '@/app/actions/maintenance';
 import {
   Calendar,
   Gauge,
-  Target,
   Trash2,
   ZoomIn,
   X,
@@ -93,19 +92,6 @@ export function MaintenanceDetailDialog({
               <span className="text-sm sm:text-lg font-mono font-bold text-zinc-800 mt-1 block">{formatCurrency(costCents)}</span>
             </div>}
           </div>
-
-          {/* Target Scadenza */}
-          {log.next_due_km_hours && (
-            <div className="bg-white/50 p-3 sm:p-3.5 rounded-xl border border-zinc-200/80 flex items-center justify-between">
-              <span className="text-xs sm:text-sm text-zinc-600 flex items-center gap-1.5">
-                <Target className="w-3.5 h-3.5 text-amber-700" />
-                Prossima Scadenza Prevista
-              </span>
-              <span className="text-xs sm:text-sm font-mono font-bold text-amber-700">
-                {formatKm(log.next_due_km_hours)}
-              </span>
-            </div>
-          )}
 
           {/* Descrizione e Ricambi */}
           <div className="mt-2.5">

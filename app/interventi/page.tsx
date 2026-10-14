@@ -7,7 +7,7 @@ import { calculateStats } from '@/lib/reminders';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { MaintenanceList } from '@/components/maintenance/MaintenanceList';
-import { maintenanceCostCents } from '@/lib/annual-costs';
+import { isExtraordinaryMaintenance, maintenanceCostCents } from '@/lib/annual-costs';
 import { formatCurrency } from '@/lib/expenses';
 import { Wrench, Plus } from 'lucide-react';
 
@@ -18,8 +18,9 @@ export default async function InterventiPage() {
   const { bike, logs, scheduled, isFallback } = await getMainData();
   if (!bike) return <EmptyGarage databaseUnavailable={isFallback} />;
   const stats = calculateStats(bike, logs, scheduled);
+  const extraordinaryLogs = logs.filter(isExtraordinaryMaintenance);
   const currentYear = new Date().getFullYear();
-  const annualInterventionCents = logs
+  const annualInterventionCents = extraordinaryLogs
     .filter(log => log.date.startsWith(`${currentYear}-`))
     .reduce((total, log) => total + maintenanceCostCents(log.cost), 0);
 
@@ -34,26 +35,26 @@ export default async function InterventiPage() {
               <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-700">
                 <Wrench className="w-5 h-5" />
               </div>
-              Storico Interventi
+              Storico straordinari
             </h1>
             <p className="text-xs sm:text-sm text-zinc-600 mt-1">
-              Registro tecnico di manutenzioni, ricambi e foto per {bike.name}
+              Riparazioni non ricorrenti, costi e documentazione per {bike.name}
             </p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap justify-end">
-          <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-right"><p className="text-[10px] uppercase text-zinc-500">Interventi {currentYear}</p><p className="text-sm font-bold font-mono text-zinc-900">{formatCurrency(annualInterventionCents)}</p></div>
+          <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-right"><p className="text-[10px] uppercase text-zinc-500">Spese straordinarie {currentYear}</p><p className="text-sm font-bold font-mono text-zinc-900">{formatCurrency(annualInterventionCents)}</p></div>
           <Link
-            href="/interventi/nuovo"
+            href={`/interventi/nuovo?vehicle=${bike.id}`}
             className="min-h-11 flex items-center gap-1.5 px-3.5 sm:px-4 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs sm:text-sm font-bold transition-colors shrink-0"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Nuovo Intervento</span>
+            <span>Nuovo straordinario</span>
           </Link>
           </div>
         </div>
 
-        <MaintenanceList logs={logs} />
+        <MaintenanceList logs={extraordinaryLogs} />
       </main>
 
       <BottomNav alertsCount={stats.alertsTotal} />

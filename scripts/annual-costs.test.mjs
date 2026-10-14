@@ -8,7 +8,7 @@ const code = ts.transpileModule(fs.readFileSync(new URL('../lib/annual-costs.ts'
 }).outputText;
 const loadedModule = { exports: {} };
 new Function('require', 'module', 'exports', code)(() => ({}), loadedModule, loadedModule.exports);
-const { maintenanceCostCents, summarizeAnnualVehicleCosts } = loadedModule.exports;
+const { isExtraordinaryMaintenance, maintenanceCostCents, summarizeAnnualVehicleCosts } = loadedModule.exports;
 
 test('somma spese ricorrenti e interventi straordinari dello stesso anno', () => {
   const reminders = [
@@ -38,4 +38,10 @@ test('converte i costi decimali in centesimi senza errori di virgola mobile', ()
   assert.equal(maintenanceCostCents(null), 0);
   assert.throws(() => maintenanceCostCents('-1'));
   assert.throws(() => maintenanceCostCents('non valido'));
+});
+
+test('lo storico riconosce come straordinari soltanto gli interventi con costo', () => {
+  assert.equal(isExtraordinaryMaintenance({ cost: '80.00' }), true);
+  assert.equal(isExtraordinaryMaintenance({ cost: 0 }), false);
+  assert.equal(isExtraordinaryMaintenance({ cost: null }), false);
 });

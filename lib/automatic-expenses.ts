@@ -1,5 +1,5 @@
 import type { Bike, MaintenanceLog, VehicleReminder } from './supabase/types';
-import { maintenanceCostCents } from './annual-costs';
+import { isExtraordinaryMaintenance, maintenanceCostCents } from './annual-costs';
 
 export interface AutomaticExpense {
   id: string;
@@ -37,9 +37,8 @@ export function buildAutomaticExpenses(bikes: Bike[], reminders: VehicleReminder
   }
 
   for (const log of logs) {
-    if (!vehicles.has(log.bike_id)) continue;
+    if (!vehicles.has(log.bike_id) || !isExtraordinaryMaintenance(log)) continue;
     const amountCents = maintenanceCostCents(log.cost);
-    if (!amountCents) continue;
     rows.push({
       id: `log-${log.id}`,
       vehicleId: log.bike_id,

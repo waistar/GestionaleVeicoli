@@ -91,7 +91,8 @@ Non creare veicoli, interventi o scadenze di esempio durante le letture o la con
 
 ## Registro spese
 - La pagina `/spese` deriva automaticamente tutte le voci dalle scadenze con `amount_cents` e dagli interventi straordinari con `maintenance_logs.cost`; non offre inserimenti manuali separati.
-- `maintenance_logs.cost` è valorizzato soltanto quando l’operatore seleziona “Intervento straordinario con spesa”. I totali annuali, sia del singolo veicolo sia dell’intera flotta, sommano ricorrenti e straordinarie senza duplicazioni.
+- Lo Storico contiene esclusivamente interventi straordinari non ricorrenti: il costo è obbligatorio e `next_due_km_hours` resta nullo. Le manutenzioni pianificate appartengono allo scadenzario.
+- I totali annuali, sia del singolo veicolo sia dell’intera flotta, sommano ricorrenti e straordinarie senza duplicazioni.
 - `lib/annual-costs.ts` calcola i totali annuali in centesimi e `lib/automatic-expenses.ts` costruisce il registro consultabile. Non aggiungere dati dimostrativi.
 
 ## Registrazione veicoli
