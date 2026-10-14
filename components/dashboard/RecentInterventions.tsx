@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { MaintenanceLog } from '@/lib/supabase/types';
-import { formatCurrency, formatKm } from '@/lib/reminders';
+import { formatKm } from '@/lib/reminders';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Wrench, Calendar, ChevronRight, Image as ImageIcon, Plus } from 'lucide-react';
@@ -18,13 +18,13 @@ export function RecentInterventions({ logs }: RecentInterventionsProps) {
 
   if (logs.length === 0) {
     return (
-      <Card className="bg-zinc-900/60 border-zinc-800 p-6 text-center rounded-2xl">
-        <div className="w-12 h-12 rounded-2xl bg-zinc-800 flex items-center justify-center mx-auto text-zinc-400 mb-3">
+      <Card className="bg-zinc-50/60 border-zinc-200 p-6 text-center rounded-2xl">
+        <div className="w-12 h-12 rounded-2xl bg-zinc-100 flex items-center justify-center mx-auto text-zinc-600 mb-3">
           <Wrench className="w-6 h-6" />
         </div>
-        <h3 className="text-sm font-bold text-zinc-200">Nessun intervento registrato</h3>
-        <p className="text-xs text-zinc-400 mt-1 max-w-xs mx-auto">
-          Inizia a tenere traccia della manutenzione della tua moto per monitorare costi e scadenze.
+        <h3 className="text-sm font-bold text-zinc-800">Nessun intervento registrato</h3>
+        <p className="text-xs text-zinc-600 mt-1 max-w-xs mx-auto">
+          Registra gli interventi per mantenere aggiornati lo storico tecnico e le scadenze del veicolo.
         </p>
         <Link
           href="/interventi/nuovo"
@@ -42,13 +42,13 @@ export function RecentInterventions({ logs }: RecentInterventionsProps) {
     <>
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
-            <Wrench className="w-4 h-4 text-orange-400" />
+          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-700 flex items-center gap-2">
+            <Wrench className="w-4 h-4 text-orange-700" />
             Ultimi Interventi
           </h2>
           <Link
             href="/interventi"
-            className="text-xs font-semibold text-orange-400 hover:text-orange-300 flex items-center gap-0.5"
+            className="text-xs font-semibold text-orange-700 hover:text-orange-700 flex items-center gap-0.5"
           >
             Tutti ({logs.length}) <ChevronRight className="w-3.5 h-3.5" />
           </Link>
@@ -59,11 +59,11 @@ export function RecentInterventions({ logs }: RecentInterventionsProps) {
             <Card
               key={log.id}
               onClick={() => setSelectedLog(log)}
-              className="bg-zinc-900/80 border-zinc-800 p-3.5 sm:p-4 rounded-2xl hover:border-zinc-700 hover:bg-zinc-850/60 transition-all cursor-pointer active:scale-98 shadow-sm flex items-center justify-between gap-3 group"
+              className="bg-zinc-50/80 border-zinc-200 p-3.5 sm:p-4 rounded-2xl hover:border-zinc-200 hover:bg-zinc-100/60 transition-all cursor-pointer active:scale-98 shadow-sm flex items-center justify-between gap-3 group"
             >
               <div className="flex items-center gap-3.5 flex-1 min-w-0">
                 {log.image_url ? (
-                  <div className="hidden sm:block w-13 h-13 rounded-xl overflow-hidden shrink-0 border border-zinc-800 bg-zinc-950">
+                  <div className="hidden sm:block w-13 h-13 rounded-xl overflow-hidden shrink-0 border border-zinc-200 bg-white">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={log.image_url}
@@ -75,25 +75,23 @@ export function RecentInterventions({ logs }: RecentInterventionsProps) {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="outline" className="bg-zinc-800 border-zinc-700 text-orange-400 text-[10px] font-semibold px-2 py-0.5">
+                    <Badge variant="outline" className="bg-zinc-100 border-zinc-200 text-orange-700 text-[10px] font-semibold px-2 py-0.5">
                       {log.category}
                     </Badge>
-                    <span className="text-[11px] sm:text-xs font-mono text-zinc-400 flex items-center gap-1">
+                    <span className="text-[11px] sm:text-xs font-mono text-zinc-600 flex items-center gap-1">
                       <Calendar className="w-3 h-3 text-zinc-500" />
                       {new Date(log.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
 
-                  <p className="text-xs sm:text-sm font-medium text-zinc-200 line-clamp-1 group-hover:text-white transition-colors">
+                  <p className="text-xs sm:text-sm font-medium text-zinc-800 line-clamp-1 group-hover:text-zinc-900 transition-colors">
                     {log.description}
                   </p>
 
-                  <div className="flex items-center gap-3 mt-1.5 text-[11px] sm:text-xs text-zinc-400 font-mono">
+                  <div className="flex items-center gap-3 mt-1.5 text-[11px] sm:text-xs text-zinc-600 font-mono">
                     <span>{formatKm(log.km_hours)}</span>
-                    <span>•</span>
-                    <span className="font-semibold text-emerald-400">{formatCurrency(log.cost)}</span>
                     {log.image_url && (
-                      <span className="sm:hidden text-orange-400 flex items-center gap-0.5">
+                      <span className="sm:hidden text-orange-700 flex items-center gap-0.5">
                         • <ImageIcon className="w-3 h-3" /> Foto
                       </span>
                     )}
@@ -101,7 +99,7 @@ export function RecentInterventions({ logs }: RecentInterventionsProps) {
                 </div>
               </div>
 
-              <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all shrink-0" />
+              <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-zinc-700 group-hover:translate-x-0.5 transition-all shrink-0" />
             </Card>
           ))}
         </div>

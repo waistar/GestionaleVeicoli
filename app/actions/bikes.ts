@@ -1,155 +1,34 @@
 'use server'
 
+import { VEHICLE_TYPES, type VehicleType } from '@/lib/vehicle-catalog';
 import { createClient } from '@/lib/supabase/server';
 import { Bike } from '@/lib/supabase/types';
-import { FALLBACK_BIKE, FALLBACK_GARAGE_BIKES } from '@/lib/demo-data';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 
 const ACTIVE_BIKE_COOKIE = 'active_bike_id';
 
-/**
- * Retrieves the currently active bike.
- * Checks cookie 'active_bike_id', then database, or fallback demo bikes.
- */
-export async function getActiveBike(preferredId?: string): Promise<{
-  bike: Bike;
-  isFallback: boolean;
-  error?: string;
+/** Reads the fleet without inserting or synthesizing vehicles. */
+export async function getAllBikes(): Promise<{
+  bikes: Bike[]; activeBikeId: string; isFallback: boolean; error?: string;
 }> {
   try {
     const cookieStore = await cookies();
-    const activeIdFromCookie = preferredId || cookieStore.get(ACTIVE_BIKE_COOKIE)?.value;
-
-    const supabase = await createClient();
-
-    // If an ID is requested/stored, try to fetch it first
-    if (activeIdFromCookie) {
-      const { data: specificBike, error: specificError } = await supabase
-        .from('bikes')
-        .select('*')
-        .eq('id', activeIdFromCookie)
-        .maybeSingle();
-
-      if (specificBike && !specificError) {
-        return { bike: specificBike as Bike, isFallback: false };
-      }
-    }
-
-    // Default to the first bike in the garage
-    const { data, error } = await supabase
-      .from('bikes')
-      .select('*')
-      .order('created_at', { ascending: true })
-      .limit(1);
-
-    if (error) {
-      // Supabase error or table not yet configured, use demo data
-      const matchedFallback = activeIdFromCookie
-        ? FALLBACK_GARAGE_BIKES.find((b) => b.id === activeIdFromCookie) || FALLBACK_BIKE
-        : FALLBACK_BIKE;
-      return { bike: matchedFallback, isFallback: true, error: error.message };
-    }
-
-    if (!data || data.length === 0) {
-      // Auto seed default bike into database
-      const { data: inserted, error: insertErr } = await supabase
-        .from('bikes')
-        .insert({
-          name: FALLBACK_BIKE.name,
-          model: FALLBACK_BIKE.model,
-          year: FALLBACK_BIKE.year,
-          current_km_hours: FALLBACK_BIKE.current_km_hours,
-          category: FALLBACK_BIKE.category || 'naked',
-          primary_color: FALLBACK_BIKE.primary_color || '#0284c7',
-          accent_color: FALLBACK_BIKE.accent_color || '#0f172a',
-          image_url: FALLBACK_BIKE.image_url,
-        })
-        .select()
-        .single();
-
-      if (insertErr || !inserted) {
-        return { bike: FALLBACK_BIKE, isFallback: true };
-      }
-
-      cookieStore.set(ACTIVE_BIKE_COOKIE, inserted.id, {
-        path: '/',
-        maxAge: 60 * 60 * 24 * 365,
-        sameSite: 'lax',
-      });
-
-      return { bike: inserted as Bike, isFallback: false };
-    }
-
-    const firstBike = data[0] as Bike;
-    // Persist as cookie if not set
-    if (!activeIdFromCookie) {
-      cookieStore.set(ACTIVE_BIKE_COOKIE, firstBike.id, {
-        path: '/',
-        maxAge: 60 * 60 * 24 * 365,
-        sameSite: 'lax',
-      });
-    }
-
-    return { bike: firstBike, isFallback: false };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    const cookieStore = await cookies().catch(() => null);
-    const activeIdFromCookie = cookieStore?.get(ACTIVE_BIKE_COOKIE)?.value;
-    const matchedFallback = activeIdFromCookie
-      ? FALLBACK_GARAGE_BIKES.find((b) => b.id === activeIdFromCookie) || FALLBACK_BIKE
-      : FALLBACK_BIKE;
-
-    return { bike: matchedFallback, isFallback: true, error: msg };
+    const activeId = cookieStore.get(ACTIVE_BIKE_COOKIE)?.value;
+    const db = await createClient();
+    const { data, error } = await db.from('bikes').select('*').order('created_at', { ascending: false });
+    if (error) return { bikes: [], activeBikeId: '', isFallback: true, error: error.message };
+    const bikes = (data || []) as Bike[];
+    return { bikes, activeBikeId: bikes.find(b => b.id === activeId)?.id || bikes[0]?.id || '', isFallback: false };
+  } catch (e) {
+    return { bikes: [], activeBikeId: '', isFallback: true, error: e instanceof Error ? e.message : 'Database non disponibile.' };
   }
 }
-
-/**
- * Returns all bikes registered in the user's garage.
- */
-export async function getAllBikes(): Promise<{
-  bikes: Bike[];
-  activeBikeId: string;
-  isFallback: boolean;
-  error?: string;
+export async function getActiveBike(preferredId?: string): Promise<{
+  bike: Bike | null; isFallback: boolean; error?: string;
 }> {
-  try {
-    const cookieStore = await cookies();
-    const activeBikeId = cookieStore.get(ACTIVE_BIKE_COOKIE)?.value;
-
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from('bikes')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error || !data || data.length === 0) {
-      return {
-        bikes: FALLBACK_GARAGE_BIKES,
-        activeBikeId: activeBikeId || FALLBACK_BIKE.id,
-        isFallback: true,
-        error: error?.message,
-      };
-    }
-
-    const bikesList = data as Bike[];
-    const resolvedActiveId =
-      bikesList.find((b) => b.id === activeBikeId)?.id || bikesList[0].id;
-
-    return {
-      bikes: bikesList,
-      activeBikeId: resolvedActiveId,
-      isFallback: false,
-    };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return {
-      bikes: FALLBACK_GARAGE_BIKES,
-      activeBikeId: FALLBACK_BIKE.id,
-      isFallback: true,
-      error: msg,
-    };
-  }
+  const { bikes, activeBikeId, isFallback, error } = await getAllBikes();
+  return { bike: bikes.find(b => b.id === (preferredId || activeBikeId)) || bikes[0] || null, isFallback, error };
 }
 
 /**
@@ -177,7 +56,7 @@ export async function setActiveBike(bikeId: string): Promise<{ success: boolean;
 }
 
 /**
- * Create a new bike in the garage with initial profile photo & 3D attributes.
+ * Create a vehicle with profile photo and registry data.
  */
 export async function createBike(formData: FormData): Promise<{
   success: boolean;
@@ -193,15 +72,17 @@ export async function createBike(formData: FormData): Promise<{
     const year = yearRaw && !isNaN(parseInt(yearRaw)) ? parseInt(yearRaw) : null;
     const kmHoursRaw = formData.get('current_km_hours') as string;
     const kmHours = kmHoursRaw && !isNaN(parseFloat(kmHoursRaw)) ? parseFloat(kmHoursRaw) : 0;
-    const category = (formData.get('category') as string)?.trim() || 'naked';
+    const vehicleType = String(formData.get('vehicle_type') || 'auto') as VehicleType;
+    const plate = String(formData.get('plate') || '').trim().toUpperCase();
+    if (!VEHICLE_TYPES.some(t => t.value === vehicleType) || plate.length > 20 || !Number.isFinite(kmHours) || kmHours < 0 || !name || !model) return { success: false, error: 'Controlla tipo, nome, modello, targa e chilometraggio.' };
     const primaryColor = (formData.get('primary_color') as string)?.trim() || '#f97316';
     const accentColor = (formData.get('accent_color') as string)?.trim() || '#18181b';
 
     if (!name) {
-      return { success: false, error: 'Il nome della moto è obbligatorio (es. Ducati Monster).' };
+      return { success: false, error: 'La marca o il nome del veicolo è obbligatorio.' };
     }
     if (!model) {
-      return { success: false, error: 'Il modello è obbligatorio (es. 937 SP).' };
+      return { success: false, error: 'Il modello è obbligatorio.' };
     }
 
     let imageUrl: string | null = null;
@@ -238,11 +119,12 @@ export async function createBike(formData: FormData): Promise<{
     const { data: newBike, error: insertError } = await supabase
       .from('bikes')
       .insert({
+        vehicle_type: vehicleType,
+        plate: plate || null,
         name,
         model,
         year,
         current_km_hours: kmHours,
-        category,
         primary_color: primaryColor,
         accent_color: accentColor,
         image_url: imageUrl,
@@ -293,16 +175,19 @@ export async function updateBike(bikeId: string, formData: FormData): Promise<{
     const year = yearRaw && !isNaN(parseInt(yearRaw)) ? parseInt(yearRaw) : null;
     const kmHoursRaw = formData.get('current_km_hours') as string;
     const kmHours = kmHoursRaw && !isNaN(parseFloat(kmHoursRaw)) ? parseFloat(kmHoursRaw) : 0;
-    const category = (formData.get('category') as string)?.trim() || 'naked';
+    const vehicleType = String(formData.get('vehicle_type') || 'auto') as VehicleType;
+    const plate = String(formData.get('plate') || '').trim().toUpperCase();
+    if (!VEHICLE_TYPES.some(t => t.value === vehicleType) || plate.length > 20 || !Number.isFinite(kmHours) || kmHours < 0 || !name || !model) return { success: false, error: 'Controlla tipo, nome, modello, targa e chilometraggio.' };
     const primaryColor = (formData.get('primary_color') as string)?.trim() || '#f97316';
     const accentColor = (formData.get('accent_color') as string)?.trim() || '#18181b';
 
     const updates: Partial<Bike> = {
+      vehicle_type: vehicleType,
+      plate: plate || null,
       name,
       model,
       year,
       current_km_hours: kmHours,
-      category,
       primary_color: primaryColor,
       accent_color: accentColor,
     };
@@ -368,13 +253,6 @@ export async function deleteBike(bikeId: string): Promise<{ success: boolean; er
       .from('bikes')
       .select('id')
       .order('created_at', { ascending: true });
-
-    if (allBikes && allBikes.length <= 1) {
-      return {
-        success: false,
-        error: 'Non puoi eliminare l\'unica moto presente nel garage. Aggiungine prima un\'altra.',
-      };
-    }
 
     const { error: deleteError } = await supabase
       .from('bikes')

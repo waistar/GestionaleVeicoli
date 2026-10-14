@@ -1,60 +1,25 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server';
-import { Bike, MaintenanceLog } from '@/lib/supabase/types';
-import { FALLBACK_BIKE, FALLBACK_LOGS } from '@/lib/demo-data';
+import { Bike, MaintenanceLog, VehicleReminder } from '@/lib/supabase/types';
 import { revalidatePath } from 'next/cache';
 
 import { getActiveBike } from '@/app/actions/bikes';
 
 export async function getMainData(preferredBikeId?: string): Promise<{
-  bike: Bike;
-  logs: MaintenanceLog[];
-  isFallback: boolean;
-  error?: string;
+  bike: Bike | null; logs: MaintenanceLog[]; scheduled: VehicleReminder[]; isFallback: boolean; error?: string;
 }> {
+  const { bike, isFallback, error } = await getActiveBike(preferredBikeId);
+  if (!bike) return { bike: null, logs: [], scheduled: [], isFallback, error };
   try {
-    const { bike, isFallback: bikeFallback, error: bikeError } = await getActiveBike(preferredBikeId);
-
-    if (bikeFallback) {
-      const filteredLogs = FALLBACK_LOGS.filter((l) => l.bike_id === bike.id);
-      return {
-        bike,
-        logs: filteredLogs.length > 0 ? filteredLogs : FALLBACK_LOGS,
-        isFallback: true,
-        error: bikeError,
-      };
-    }
-
-    const supabase = await createClient();
-    const { data: logs, error: logsError } = await supabase
-      .from('maintenance_logs')
-      .select('*')
-      .eq('bike_id', bike.id)
-      .order('date', { ascending: false });
-
-    if (logsError) {
-      return {
-        bike,
-        logs: [],
-        isFallback: false,
-        error: logsError.message,
-      };
-    }
-
-    return {
-      bike,
-      logs: (logs || []) as MaintenanceLog[],
-      isFallback: false,
-    };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return {
-      bike: FALLBACK_BIKE,
-      logs: FALLBACK_LOGS,
-      isFallback: true,
-      error: msg,
-    };
+    const db = await createClient();
+    const [history, plans] = await Promise.all([
+      db.from('maintenance_logs').select('*').eq('bike_id', bike.id).order('date', {ascending:false}),
+      db.from('vehicle_reminders').select('*').eq('bike_id', bike.id),
+    ]);
+    return { bike, logs: history.data || [], scheduled: plans.data || [], isFallback: false, error: history.error?.message || plans.error?.message };
+  } catch (e) {
+    return { bike, logs: [], scheduled: [], isFallback: true, error: e instanceof Error ? e.message : 'Database non disponibile.' };
   }
 }
 
@@ -71,7 +36,6 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
     const kmHours = parseFloat(formData.get('km_hours') as string);
     const category = formData.get('category') as string;
     const description = (formData.get('description') as string) || '';
-    const cost = parseFloat((formData.get('cost') as string) || '0');
     const nextDueRaw = formData.get('next_due_km_hours') as string;
     const nextDue = nextDueRaw && nextDueRaw.trim() !== '' ? parseFloat(nextDueRaw) : null;
 
@@ -130,7 +94,6 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
         km_hours: kmHours,
         category,
         description,
-        cost: isNaN(cost) ? 0 : cost,
         image_url: imageUrl,
         next_due_km_hours: nextDue,
       })

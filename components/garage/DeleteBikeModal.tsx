@@ -38,7 +38,7 @@ export function DeleteBikeModal({
     const res = await deleteBike(bike.id);
 
     if (!res.success) {
-      setError(res.error || 'Errore durante l\'eliminazione della moto.');
+      setError(res.error || 'Errore durante l\'eliminazione del veicolo.');
       setIsDeleting(false);
       return;
     }
@@ -50,22 +50,22 @@ export function DeleteBikeModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-zinc-950 border-zinc-800 text-zinc-100 p-5 rounded-2xl">
+      <DialogContent className="max-w-md bg-white border-zinc-200 text-zinc-900 p-5 rounded-2xl">
         <DialogHeader>
-          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mb-2 mx-auto">
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 flex items-center justify-center mb-2 mx-auto">
             <Trash2 className="w-6 h-6" />
           </div>
-          <DialogTitle className="text-center text-lg font-bold text-zinc-100">
+          <DialogTitle className="text-center text-lg font-bold text-zinc-900">
             Rimuovere {bike.name}?
           </DialogTitle>
-          <DialogDescription className="text-center text-zinc-400 text-xs mt-1">
-            Sei sicuro di voler eliminare questa moto dal garage? Verranno rimossi anche tutti gli interventi e le ricevute associate a questo veicolo.
+          <DialogDescription className="text-center text-zinc-600 text-xs mt-1">
+            Sei sicuro di voler eliminare questo veicolo dal garage? Verranno rimossi anche tutti gli interventi e le foto associate a questo veicolo. Le spese registrate resteranno nello storico.
           </DialogDescription>
         </DialogHeader>
 
         {error && (
-          <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+          <div className="p-3 rounded-xl bg-rose-50/40 border border-rose-500/40 text-rose-700 text-xs flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-rose-700" />
             <span>{error}</span>
           </div>
         )}
@@ -76,7 +76,7 @@ export function DeleteBikeModal({
             variant="outline"
             disabled={isDeleting}
             onClick={() => onOpenChange(false)}
-            className="flex-1 border-zinc-800 text-zinc-300 hover:bg-zinc-850 h-11"
+            className="flex-1 border-zinc-200 text-zinc-700 hover:bg-zinc-100 h-11"
           >
             Annulla
           </Button>

@@ -1,3 +1,4 @@
+import { EmptyGarage } from '@/components/garage/EmptyGarage';
 import React from 'react';
 import Link from 'next/link';
 import { getMainData } from '@/app/actions/maintenance';
@@ -12,8 +13,9 @@ export const dynamic = 'force-dynamic';
 
 export default async function InterventiPage() {
   const { bikes } = await getAllBikes();
-  const { bike, logs } = await getMainData();
-  const stats = calculateStats(bike, logs);
+  const { bike, logs, scheduled, isFallback } = await getMainData();
+  if (!bike) return <EmptyGarage databaseUnavailable={isFallback} />;
+  const stats = calculateStats(bike, logs, scheduled);
 
   return (
     <>
@@ -22,14 +24,14 @@ export default async function InterventiPage() {
       <main className="flex-1 max-w-md md:max-w-5xl lg:max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 md:pt-6 pb-20 md:pb-10">
         <div className="flex items-center justify-between mb-4 sm:mb-6 px-1">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400">
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-700">
                 <Wrench className="w-5 h-5" />
               </div>
               Storico Interventi
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-              Registro completo di manutenzioni, ricambi e scontrini per {bike.name}
+            <p className="text-xs sm:text-sm text-zinc-600 mt-1">
+              Registro tecnico di manutenzioni, ricambi e foto per {bike.name}
             </p>
           </div>
 

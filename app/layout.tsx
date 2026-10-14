@@ -15,13 +15,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MotoTracker | Gestione & Manutenzione Moto",
-  description: "App PWA mobile-first per la manutenzione, tagliandi e tracciamento scadenze della tua moto",
+  title: "FleetDesk | Gestionale interno",
+  description: "Gestionale interno per parco veicoli, registro degli interventi e scadenze di manutenzione",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "MotoTracker",
+    title: "FleetDesk",
   },
   icons: {
     icon: [
@@ -40,7 +40,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#09090b",
+  themeColor: "#fafafa",
 };
 
 export default function RootLayout({
@@ -49,14 +49,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="it" className="dark h-full">
+    <html lang="it" className="h-full">
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} min-h-full bg-zinc-950 text-zinc-100 antialiased font-sans flex flex-col selection:bg-orange-500 selection:text-white pb-20 md:pb-8`}
+        className={`${inter.variable} ${jetbrainsMono.variable} min-h-full bg-zinc-50 text-zinc-900 antialiased font-sans flex flex-col selection:bg-orange-500 selection:text-white pb-20 md:pb-8`}
       >
         {children}
       </body>

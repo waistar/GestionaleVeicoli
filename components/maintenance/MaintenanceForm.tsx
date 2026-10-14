@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bike, MAINTENANCE_CATEGORIES, MaintenanceCategory } from '@/lib/supabase/types';
+import { catalogFor, vehicleType } from '@/lib/vehicle-catalog';
+import { Bike, MaintenanceCategory } from '@/lib/supabase/types';
 import { createMaintenanceLog } from '@/app/actions/maintenance';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +12,6 @@ import { Card } from '@/components/ui/card';
 import {
   Calendar,
   Gauge,
-  CircleDollarSign,
   Target,
   Camera,
   Upload,
@@ -25,17 +25,17 @@ import {
 
 interface MaintenanceFormProps {
   bike: Bike;
+  initialCategory?: string;
 }
 
-export function MaintenanceForm({ bike }: MaintenanceFormProps) {
+export function MaintenanceForm({ bike, initialCategory = 'Tagliando' }: MaintenanceFormProps) {
   const router = useRouter();
 
   const todayStr = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(todayStr);
   const [kmHours, setKmHours] = useState(bike.current_km_hours.toString());
-  const [category, setCategory] = useState<MaintenanceCategory>('Tagliando');
+  const [category, setCategory] = useState<MaintenanceCategory>(initialCategory);
   const [description, setDescription] = useState('');
-  const [cost, setCost] = useState('');
   const [nextDueKm, setNextDueKm] = useState('');
 
   // Image upload state
@@ -92,7 +92,6 @@ export function MaintenanceForm({ bike }: MaintenanceFormProps) {
       formData.append('km_hours', kmHours);
       formData.append('category', category);
       formData.append('description', description.trim());
-      formData.append('cost', cost ? parseFloat(cost).toString() : '0');
 
       if (nextDueKm && nextDueKm.trim() !== '') {
         formData.append('next_due_km_hours', nextDueKm.trim());
@@ -123,8 +122,8 @@ export function MaintenanceForm({ bike }: MaintenanceFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 pb-12">
       {errorMessage && (
-        <div className="rounded-xl bg-rose-950/40 border border-rose-500/50 p-3.5 flex items-center gap-2.5 text-rose-200 text-xs">
-          <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+        <div className="rounded-xl bg-rose-50/40 border border-rose-500/50 p-3.5 flex items-center gap-2.5 text-rose-700 text-xs">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-700" />
           <span>{errorMessage}</span>
         </div>
       )}
@@ -133,54 +132,36 @@ export function MaintenanceForm({ bike }: MaintenanceFormProps) {
         {/* Left Column (Primary Inputs) */}
         <div className="lg:col-span-7 space-y-4">
           {/* 1. Categoria (Touch Chips) */}
-          <Card className="bg-zinc-900/90 border-zinc-800 p-4 sm:p-5 rounded-2xl">
-            <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-              <Tag className="w-3.5 h-3.5 text-orange-400" />
+          <Card className="bg-zinc-50/90 border-zinc-200 p-4 sm:p-5 rounded-2xl">
+            <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-orange-700" />
               Categoria Intervento *
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {MAINTENANCE_CATEGORIES.map((cat) => {
-                const isSelected = category === cat;
-                return (
-                  <button
-                    type="button"
-                    key={cat}
-                    onClick={() => setCategory(cat)}
-                    className={`py-2.5 px-3 rounded-xl text-xs font-semibold text-center border transition-all active:scale-95 ${
-                      isSelected
-                        ? 'bg-orange-600 border-orange-500 text-white shadow-md shadow-orange-600/30'
-                        : 'bg-zinc-950/70 border-zinc-800 text-zinc-300 hover:border-zinc-700'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                );
-              })}
-            </div>
+<select aria-label="Categoria intervento" value={category} onChange={e => setCategory(e.target.value)} className="w-full min-h-11 rounded-xl border border-zinc-200 bg-white px-3 text-base">{[...new Set([category, ...catalogFor(vehicleType(bike)).map(c => c.label)])].map(cat => <option key={cat}>{cat}</option>)}</select>
           </Card>
 
-          {/* 2. Dati Base: Data, Chilometraggio, Costo */}
-          <Card className="bg-zinc-900/90 border-zinc-800 p-4 sm:p-5 rounded-2xl space-y-3.5">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* 2. Dati Base: Data e Chilometraggio */}
+          <Card className="bg-zinc-50/90 border-zinc-200 p-4 sm:p-5 rounded-2xl space-y-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Data */}
               <div>
-                <label className="text-xs font-semibold text-zinc-300 mb-1.5 flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-orange-400" />
+                <label className="text-xs font-semibold text-zinc-700 mb-1.5 flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-orange-700" />
                   Data *
                 </label>
                 <Input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="bg-zinc-950 border-zinc-700 text-zinc-100 text-sm h-11"
+                  className="bg-white border-zinc-200 text-zinc-900 text-sm h-11"
                   required
                 />
               </div>
 
               {/* Chilometraggio o Ore */}
               <div>
-                <label className="text-xs font-semibold text-zinc-300 mb-1.5 flex items-center gap-1">
-                  <Gauge className="w-3.5 h-3.5 text-orange-400" />
+                <label className="text-xs font-semibold text-zinc-700 mb-1.5 flex items-center gap-1">
+                  <Gauge className="w-3.5 h-3.5 text-orange-700" />
                   Km / Ore *
                 </label>
                 <Input
@@ -188,56 +169,34 @@ export function MaintenanceForm({ bike }: MaintenanceFormProps) {
                   value={kmHours}
                   onChange={(e) => setKmHours(e.target.value)}
                   placeholder="es. 14500"
-                  className="bg-zinc-950 border-zinc-700 text-zinc-100 font-mono text-sm h-11"
+                  className="bg-white border-zinc-200 text-zinc-900 font-mono text-sm h-11"
                   required
                   min="0"
                   step="any"
                 />
               </div>
-
-              {/* Costo */}
-              <div>
-                <label className="text-xs font-semibold text-zinc-300 mb-1.5 flex items-center gap-1">
-                  <CircleDollarSign className="w-3.5 h-3.5 text-emerald-400" />
-                  Costo Sostenuto (€)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm">
-                    €
-                  </span>
-                  <Input
-                    type="number"
-                    value={cost}
-                    onChange={(e) => setCost(e.target.value)}
-                    placeholder="0.00"
-                    className="bg-zinc-950 border-zinc-700 text-zinc-100 font-mono text-sm h-11 pl-7"
-                    step="0.01"
-                    min="0"
-                  />
-                </div>
-              </div>
             </div>
           </Card>
 
           {/* 3. Descrizione & Ricambi */}
-          <Card className="bg-zinc-900/90 border-zinc-800 p-4 sm:p-5 rounded-2xl">
-            <label className="text-xs font-semibold text-zinc-300 mb-1.5 flex items-center gap-1">
-              <FileText className="w-3.5 h-3.5 text-orange-400" />
+          <Card className="bg-zinc-50/90 border-zinc-200 p-4 sm:p-5 rounded-2xl">
+            <label className="text-xs font-semibold text-zinc-700 mb-1.5 flex items-center gap-1">
+              <FileText className="w-3.5 h-3.5 text-orange-700" />
               Descrizione Lavori & Ricambi Utilizzati *
             </label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Es: Cambio olio motore Motul 7100 10W50, sostituzione filtro olio originale, pulizia e ingrassaggio catena..."
-              className="bg-zinc-950 border-zinc-700 text-zinc-100 text-sm min-h-[100px] resize-none"
+              className="bg-white border-zinc-200 text-zinc-900 text-sm min-h-[100px] resize-none"
               required
             />
           </Card>
 
           {/* 4. Prossima Scadenza Prevista */}
-          <Card className="bg-zinc-900/90 border-zinc-800 p-4 sm:p-5 rounded-2xl">
-            <label className="text-xs font-semibold text-zinc-300 mb-1.5 flex items-center gap-1">
-              <Target className="w-3.5 h-3.5 text-amber-400" />
+          <Card className="bg-zinc-50/90 border-zinc-200 p-4 sm:p-5 rounded-2xl">
+            <label className="text-xs font-semibold text-zinc-700 mb-1.5 flex items-center gap-1">
+              <Target className="w-3.5 h-3.5 text-amber-700" />
               Prossimo Intervento Previsto (Km o Ore target)
             </label>
             <Input
@@ -245,7 +204,7 @@ export function MaintenanceForm({ bike }: MaintenanceFormProps) {
               value={nextDueKm}
               onChange={(e) => setNextDueKm(e.target.value)}
               placeholder="es. 20000"
-              className="bg-zinc-950 border-zinc-700 text-zinc-100 font-mono text-sm h-11"
+              className="bg-white border-zinc-200 text-zinc-900 font-mono text-sm h-11"
               min="0"
               step="any"
             />
@@ -254,21 +213,21 @@ export function MaintenanceForm({ bike }: MaintenanceFormProps) {
               <button
                 type="button"
                 onClick={() => addTargetKm(1000)}
-                className="text-[10px] sm:text-xs font-mono font-semibold px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-750 text-zinc-300 border border-zinc-700 transition-colors"
+                className="text-[10px] sm:text-xs font-mono font-semibold px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-200 transition-colors"
               >
                 +1.000 km
               </button>
               <button
                 type="button"
                 onClick={() => addTargetKm(5000)}
-                className="text-[10px] sm:text-xs font-mono font-semibold px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-750 text-zinc-300 border border-zinc-700 transition-colors"
+                className="text-[10px] sm:text-xs font-mono font-semibold px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-200 transition-colors"
               >
                 +5.000 km
               </button>
               <button
                 type="button"
                 onClick={() => addTargetKm(10000)}
-                className="text-[10px] sm:text-xs font-mono font-semibold px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-750 text-zinc-300 border border-zinc-700 transition-colors"
+                className="text-[10px] sm:text-xs font-mono font-semibold px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-200 transition-colors"
               >
                 +10.000 km
               </button>
@@ -278,15 +237,15 @@ export function MaintenanceForm({ bike }: MaintenanceFormProps) {
 
         {/* Right Column (Photo upload & Live Preview Summary) */}
         <div className="lg:col-span-5 space-y-4">
-          {/* 5. Upload Foto / Scontrino */}
-          <Card className="bg-zinc-900/90 border-zinc-800 p-4 sm:p-5 rounded-2xl">
-            <label className="text-xs font-semibold text-zinc-300 mb-1.5 flex items-center gap-1">
-              <Camera className="w-3.5 h-3.5 text-orange-400" />
-              Foto Ricevuta / Ricambio / Contachilometri
+          {/* 5. Documentazione fotografica */}
+          <Card className="bg-zinc-50/90 border-zinc-200 p-4 sm:p-5 rounded-2xl">
+            <label className="text-xs font-semibold text-zinc-700 mb-1.5 flex items-center gap-1">
+              <Camera className="w-3.5 h-3.5 text-orange-700" />
+              Foto intervento / Ricambio / Contachilometri
             </label>
 
             {imagePreview ? (
-              <div className="relative rounded-xl overflow-hidden border border-zinc-700 bg-zinc-950 aspect-video max-h-56 mt-2 flex items-center justify-center shadow-inner">
+              <div className="relative rounded-xl overflow-hidden border border-zinc-200 bg-white aspect-video max-h-56 mt-2 flex items-center justify-center shadow-inner">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imagePreview}
@@ -296,20 +255,20 @@ export function MaintenanceForm({ bike }: MaintenanceFormProps) {
                 <button
                   type="button"
                   onClick={removeImage}
-                  className="absolute top-2 right-2 p-1.5 rounded-full bg-zinc-900/80 text-rose-400 hover:bg-zinc-900 border border-zinc-700"
+                  className="absolute top-2 right-2 p-1.5 rounded-full bg-zinc-50/80 text-rose-700 hover:bg-zinc-50 border border-zinc-200"
                   aria-label="Rimuovi foto"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <label className="mt-2 flex flex-col items-center justify-center border-2 border-dashed border-zinc-700 hover:border-orange-500/70 rounded-xl p-5 cursor-pointer bg-zinc-950/60 transition-colors">
-                <Upload className="w-7 h-7 text-orange-400 mb-1.5" />
-                <span className="text-xs sm:text-sm font-semibold text-zinc-300">
+              <label className="mt-2 flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 hover:border-orange-500/70 rounded-xl p-5 cursor-pointer bg-white/60 transition-colors">
+                <Upload className="w-7 h-7 text-orange-700 mb-1.5" />
+                <span className="text-xs sm:text-sm font-semibold text-zinc-700">
                   Scatta o carica foto
                 </span>
                 <span className="text-[11px] text-zinc-500 mt-0.5">
-                  JPG, PNG o WEBP (salvato nel bucket ricevute)
+                  Foto di lavorazioni, ricambi o contachilometri
                 </span>
                 <input
                   type="file"
@@ -323,46 +282,40 @@ export function MaintenanceForm({ bike }: MaintenanceFormProps) {
           </Card>
 
           {/* 6. Live Summary Card (Desktop Preview) */}
-          <Card className="bg-zinc-900/90 border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-md">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3 flex items-center gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-orange-400" />
+          <Card className="bg-zinc-50/90 border-zinc-200 p-4 sm:p-5 rounded-2xl shadow-md">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-600 mb-3 flex items-center gap-2">
+              <CheckCircle2 className="w-3.5 h-3.5 text-orange-700" />
               Riepilogo Scheda
             </h4>
 
             <div className="space-y-2.5 text-xs">
-              <div className="flex items-center justify-between py-1 border-b border-zinc-800/80">
-                <span className="text-zinc-400">Veicolo</span>
-                <span className="font-semibold text-zinc-200">{bike.name}</span>
+              <div className="flex items-center justify-between py-1 border-b border-zinc-200/80">
+                <span className="text-zinc-600">Veicolo</span>
+                <span className="font-semibold text-zinc-800">{bike.name}</span>
               </div>
-              <div className="flex items-center justify-between py-1 border-b border-zinc-800/80">
-                <span className="text-zinc-400">Categoria</span>
-                <span className="font-semibold text-orange-400">{category}</span>
+              <div className="flex items-center justify-between py-1 border-b border-zinc-200/80">
+                <span className="text-zinc-600">Categoria</span>
+                <span className="font-semibold text-orange-700">{category}</span>
               </div>
-              <div className="flex items-center justify-between py-1 border-b border-zinc-800/80">
-                <span className="text-zinc-400">Data / Km</span>
-                <span className="font-mono text-zinc-200">{date} • {kmHours || '0'} km</span>
-              </div>
-              <div className="flex items-center justify-between py-1 border-b border-zinc-800/80">
-                <span className="text-zinc-400">Costo</span>
-                <span className="font-mono font-bold text-emerald-400">
-                  {cost ? `€ ${parseFloat(cost).toFixed(2)}` : '€ 0.00'}
-                </span>
+              <div className="flex items-center justify-between py-1 border-b border-zinc-200/80">
+                <span className="text-zinc-600">Data / Km</span>
+                <span className="font-mono text-zinc-800">{date} • {kmHours || '0'} km</span>
               </div>
               <div className="flex items-center justify-between py-1">
-                <span className="text-zinc-400">Prossima scadenza</span>
-                <span className="font-mono text-amber-400">
+                <span className="text-zinc-600">Prossima scadenza</span>
+                <span className="font-mono text-amber-700">
                   {nextDueKm ? `${nextDueKm} km` : 'Non specificata'}
                 </span>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-5 pt-3.5 border-t border-zinc-800 flex items-center gap-3">
+            <div className="mt-5 pt-3.5 border-t border-zinc-200 flex items-center gap-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
-                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 flex-1 h-11 sm:h-12 rounded-xl text-xs sm:text-sm font-semibold"
+                className="border-zinc-200 text-zinc-700 hover:bg-zinc-100 flex-1 h-11 sm:h-12 rounded-xl text-xs sm:text-sm font-semibold"
               >
                 Annulla
               </Button>

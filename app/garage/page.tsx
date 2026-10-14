@@ -1,3 +1,4 @@
+import { EmptyGarage } from '@/components/garage/EmptyGarage';
 import React from 'react';
 import { getAllBikes } from '@/app/actions/bikes';
 import { getMainData } from '@/app/actions/maintenance';
@@ -11,25 +12,26 @@ export const dynamic = 'force-dynamic';
 
 export default async function GaragePage() {
   const { bikes, activeBikeId } = await getAllBikes();
-  const { bike, logs } = await getMainData(activeBikeId);
-  const stats = calculateStats(bike, logs);
+  const { bike, logs, scheduled, isFallback } = await getMainData(activeBikeId);
+  if (!bike) return <EmptyGarage databaseUnavailable={isFallback} />;
+  const stats = calculateStats(bike, logs, scheduled);
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col bg-zinc-100 text-zinc-900">
       <Header bike={bike} alertsCount={stats.alertsTotal} />
 
       <main className="flex-1 max-w-md md:max-w-5xl lg:max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 md:pt-6 pb-24 md:pb-10 space-y-6">
         {/* Page Title & Garage Intro */}
         <div className="flex items-center justify-between px-1">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400">
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-700">
                 <BikeIcon className="w-5 h-5" />
               </div>
-              Il Tuo Garage
+              Parco veicoli
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-              Gestione completa della tua scuderia moto: modelli 3D interattivi, foto profilo e passaggio rapido tra veicoli.
+            <p className="text-xs sm:text-sm text-zinc-600 mt-1">
+              Anagrafica dei veicoli, schede tecniche e selezione del veicolo su cui operare.
             </p>
           </div>
         </div>
@@ -39,6 +41,6 @@ export default async function GaragePage() {
       </main>
 
       <BottomNav alertsCount={stats.alertsTotal} />
-    </>
+    </div>
   );
 }

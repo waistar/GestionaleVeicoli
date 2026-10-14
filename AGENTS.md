@@ -1,7 +1,7 @@
-# AGENTS.md — MotoTracker (Motorbike Management System)
+# AGENTS.md — FleetDesk (Motorbike Management System)
 
 ## 1. Descrizione Architettura e Stack Tecnologico
-Applicazione web mobile-first installabile come **Progressive Web App (PWA)**, progettata per la gestione completa e il tracciamento della manutenzione di una o più moto da officina/garage.
+Applicazione web mobile-first installabile come **Progressive Web App (PWA)**, progettata per la gestione interna del parco veicoli (moto, auto, furgoni e scooter), del registro tecnico degli interventi e delle scadenze di manutenzione. La pagina `/spese` registra importi in centesimi e presenta totali per veicolo, categoria e periodo. La colonna legacy `maintenance_logs.cost` resta per compatibilità; non alimenta il nuovo registro spese.
 
 - **Framework**: Next.js 15+ (App Router, Server Components e Server Actions, TypeScript).
 - **Styling & UI**: Tailwind CSS v4, shadcn/ui (radix/base), Lucide React.
@@ -17,7 +17,7 @@ Applicazione web mobile-first installabile come **Progressive Web App (PWA)**, p
 motorbike-management-sys/
 ├── app/
 │   ├── layout.tsx               # Root layout con meta tag PWA, viewport anti-zoom e font Inter / JetBrains Mono
-│   ├── page.tsx                 # Dashboard principale (Km, Spesa totale, Alert scadenze, Ultimi interventi)
+│   ├── page.tsx                 # Dashboard principale (Km, Scadenze da gestire, Interventi registrati)
 │   ├── manifest.ts              # Web App Manifest dinamico per installazione PWA
 │   ├── actions/
 │   │   ├── bikes.ts             # Server Actions per moto e aggiornamento contachilometri
@@ -39,8 +39,8 @@ motorbike-management-sys/
 │   │   ├── client.ts            # Client Supabase browser (createBrowserClient)
 │   │   ├── server.ts            # Client Supabase server-side (createServerClient)
 │   │   └── types.ts             # Interfacce TypeScript (Bike, MaintenanceLog, Categorie, Promemoria)
-│   ├── reminders.ts             # Calcolo logico delle scadenze, statistiche e formattazione valuta/km
-│   ├── demo-data.ts             # Dati fallback / demo per preview immediata
+│   ├── reminders.ts             # Calcolo logico delle scadenze, statistiche e formattazione km
+│   ├── demo-data.ts             # Collezioni vuote: nessun dato dimostrativo
 │   └── utils.ts                 # Utility di classe (cn) per Tailwind
 ├── public/
 │   ├── manifest.json            # Manifest statico PWA
@@ -78,3 +78,22 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Scadenzario multiveicolo
+- `bikes.vehicle_type` e `plate` identificano tipo e targa senza rinominare le tabelle legacy.
+- `lib/vehicle-catalog.ts` definisce il catalogo estendibile. Non fissare date normative automatiche: l’operatore inserisce le date effettive.
+- `vehicle_reminders` contiene soglie per data/km e avvisi personalizzati; la prima soglia raggiunta determina lo stato. Le voci non configurate non sono in regola.
+- La migrazione additiva per installazioni esistenti è `supabase/migrations/20261014_fleet_reminders.sql`; mantenerla allineata alla sezione 8 di `schema.sql`.
+- Il completamento usa una funzione SQL atomica. Le spese si registrano separatamente nel registro dedicato. `npm test` verifica la logica delle scadenze.
+
+## Archivio iniziale vuoto
+Non creare veicoli, interventi o scadenze di esempio durante le letture o la configurazione SQL. `getActiveBike` restituisce `null` se l’archivio è vuoto e le pagine mostrano `EmptyGarage`. È consentita l’eliminazione dell’ultimo veicolo.
+
+## Registro spese
+- `vehicle_expenses` è la fonte dei totali della pagina `/spese`; sommare centesimi interi, non importi decimali.
+- La migrazione `supabase/migrations/20261014_vehicle_expenses.sql` è allineata alla sezione 9 di `schema.sql`. Non aggiungere dati dimostrativi.
+- `bike_id` diventa nullo alla rimozione del veicolo; `vehicle_ref` e `vehicle_label` conservano il raggruppamento e lo storico. Non cancellare le spese a cascata.
+- `lib/expenses.ts` contiene validazione, filtri e aggregazione. `npm test` comprende i casi economici.
+
+## Registrazione veicoli
+I moduli di aggiunta e modifica sono comuni al parco veicoli e non espongono sottocategorie moto. Il tipo predefinito per un nuovo veicolo è Auto. La colonna legacy `category` resta compatibile con i dati esistenti e non viene riscritta durante la modifica dell’anagrafica.

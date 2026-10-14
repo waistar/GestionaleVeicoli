@@ -1,21 +1,6 @@
-export type MaintenanceCategory = 
-  | 'Tagliando'
-  | 'Olio & Filtri'
-  | 'Trasmissione/Catena'
-  | 'Gomme'
-  | 'Freni'
-  | 'Sospensioni'
-  | 'Varie';
-
-export const MAINTENANCE_CATEGORIES: MaintenanceCategory[] = [
-  'Tagliando',
-  'Olio & Filtri',
-  'Trasmissione/Catena',
-  'Gomme',
-  'Freni',
-  'Sospensioni',
-  'Varie'
-];
+import { SERVICE_CATALOG, type VehicleType } from '../vehicle-catalog';
+export type MaintenanceCategory = string;
+export const MAINTENANCE_CATEGORIES = SERVICE_CATALOG.map(c => c.label);
 
 export type BikeCategory = 
   | 'naked' 
@@ -53,6 +38,8 @@ export interface Bike {
   category?: BikeCategory | string;
   primary_color?: string;
   accent_color?: string;
+  vehicle_type?: VehicleType;
+  plate?: string | null;
 }
 
 export interface MaintenanceLog {
@@ -62,7 +49,6 @@ export interface MaintenanceLog {
   km_hours: number;
   category: MaintenanceCategory | string;
   description: string;
-  cost: number;
   image_url: string | null;
   next_due_km_hours: number | null;
   created_at: string;
@@ -79,7 +65,39 @@ export interface ReminderItem {
   description: string;
   lastDoneKm: number;
   currentKm: number;
-  nextDueKm: number;
-  kmRemaining: number;
+  nextDueKm: number | null;
+  kmRemaining: number | null;
+  title?: string;
+  dueDate?: string | null;
+  daysRemaining?: number | null;
+  source?: 'log' | 'schedule';
+  scheduled?: VehicleReminder;
   status: ReminderStatus;
+}
+
+export interface VehicleReminder {
+  id: string;
+  bike_id: string;
+  title: string;
+  category: string;
+  notes: string;
+  due_date: string | null;
+  due_km: number | null;
+  warning_days: number;
+  warning_km: number;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface VehicleExpense {
+  id: string;
+  bike_id: string | null;
+  vehicle_ref: string;
+  vehicle_label: string;
+  date: string;
+  category: string;
+  description: string;
+  amount_cents: number;
+  notes: string;
+  created_at: string;
 }

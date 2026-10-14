@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useMemo } from 'react';
-import { MaintenanceLog, MAINTENANCE_CATEGORIES } from '@/lib/supabase/types';
-import { formatCurrency, formatKm } from '@/lib/reminders';
+import { MaintenanceLog } from '@/lib/supabase/types';
+import { formatKm } from '@/lib/reminders';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -35,33 +35,28 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
         !q ||
         log.description.toLowerCase().includes(q) ||
         log.category.toLowerCase().includes(q) ||
-        log.km_hours.toString().includes(q) ||
-        (log.cost && log.cost.toString().includes(q));
+        log.km_hours.toString().includes(q);
 
       return matchCategory && matchSearch;
     });
   }, [logs, search, selectedCategory]);
 
-  const totalFilteredCost = useMemo(() => {
-    return filteredLogs.reduce((sum, l) => sum + (Number(l.cost) || 0), 0);
-  }, [filteredLogs]);
-
   return (
     <div className="space-y-4 pb-16">
       {/* 1. Barra di ricerca */}
       <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
         <Input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Cerca ricambi, olio, gomme, pastiglie o km..."
-          className="bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 pl-10 pr-9 h-11 sm:h-12 rounded-xl text-sm"
+          className="bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-500 pl-10 pr-9 h-11 sm:h-12 rounded-xl text-sm"
         />
         {search && (
           <button
             onClick={() => setSearch('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-800"
           >
             <X className="w-4 h-4" />
           </button>
@@ -75,13 +70,13 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
           className={`shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
             selectedCategory === 'Tutti'
               ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-              : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200 hover:border-zinc-700'
+              : 'bg-zinc-50 text-zinc-600 border-zinc-200 hover:text-zinc-800 hover:border-zinc-200'
           }`}
         >
           Tutti ({logs.length})
         </button>
 
-        {MAINTENANCE_CATEGORIES.map((cat) => {
+        {[...new Set(logs.map(l => l.category))].map((cat) => {
           const count = logs.filter((l) => l.category === cat).length;
           const isSelected = selectedCategory === cat;
           return (
@@ -91,7 +86,7 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
               className={`shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                 isSelected
                   ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
-                  : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200 hover:border-zinc-700'
+                  : 'bg-zinc-50 text-zinc-600 border-zinc-200 hover:text-zinc-800 hover:border-zinc-200'
               }`}
             >
               {cat} {count > 0 && `(${count})`}
@@ -101,20 +96,17 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
       </div>
 
       {/* 3. Riepilogo Filtro */}
-      <div className="flex items-center justify-between px-1 text-xs sm:text-sm text-zinc-400">
+      <div className="flex items-center justify-between px-1 text-xs sm:text-sm text-zinc-600">
         <span>
-          Visualizzati: <strong className="text-zinc-200">{filteredLogs.length}</strong> interventi
-        </span>
-        <span>
-          Totale parziale: <strong className="text-emerald-400 font-mono font-semibold">{formatCurrency(totalFilteredCost)}</strong>
+          Visualizzati: <strong className="text-zinc-800">{filteredLogs.length}</strong> interventi
         </span>
       </div>
 
       {/* 4. Lista Card in Responsive Grid (1 col mobile, 2 col desktop) */}
       {filteredLogs.length === 0 ? (
-        <Card className="bg-zinc-900/50 border-zinc-800 p-8 text-center rounded-2xl mt-4">
+        <Card className="bg-zinc-50/50 border-zinc-200 p-8 text-center rounded-2xl mt-4">
           <Filter className="w-8 h-8 mx-auto text-zinc-600 mb-2" />
-          <p className="text-sm font-semibold text-zinc-300">Nessun intervento trovato</p>
+          <p className="text-sm font-semibold text-zinc-700">Nessun intervento trovato</p>
           <p className="text-xs text-zinc-500 mt-1">
             Modifica i criteri di ricerca o azzera i filtri per vedere tutti gli interventi.
           </p>
@@ -123,7 +115,7 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
               setSearch('');
               setSelectedCategory('Tutti');
             }}
-            className="mt-3 text-xs text-orange-400 font-semibold hover:underline"
+            className="mt-3 text-xs text-orange-700 font-semibold hover:underline"
           >
             Azzera filtri
           </button>
@@ -134,11 +126,11 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
             <Card
               key={log.id}
               onClick={() => setSelectedLog(log)}
-              className="bg-zinc-900/80 border-zinc-800 p-4 rounded-2xl hover:border-zinc-700 hover:bg-zinc-850/60 transition-all cursor-pointer active:scale-98 shadow-sm flex items-center justify-between gap-3 group"
+              className="bg-zinc-50/80 border-zinc-200 p-4 rounded-2xl hover:border-zinc-200 hover:bg-zinc-100/60 transition-all cursor-pointer active:scale-98 shadow-sm flex items-center justify-between gap-3 group"
             >
               <div className="flex items-start gap-3.5 flex-1 min-w-0">
                 {log.image_url ? (
-                  <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-zinc-800 bg-zinc-950">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-zinc-200 bg-white">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={log.image_url}
@@ -152,11 +144,11 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                     <Badge
                       variant="outline"
-                      className="bg-zinc-800/80 border-zinc-700 text-orange-400 text-[10px] font-semibold px-2 py-0.5"
+                      className="bg-zinc-100/80 border-zinc-200 text-orange-700 text-[10px] font-semibold px-2 py-0.5"
                     >
                       {log.category}
                     </Badge>
-                    <span className="text-[11px] sm:text-xs font-mono text-zinc-400 flex items-center gap-1">
+                    <span className="text-[11px] sm:text-xs font-mono text-zinc-600 flex items-center gap-1">
                       <Calendar className="w-3 h-3 text-zinc-500" />
                       {new Date(log.date).toLocaleDateString('it-IT', {
                         day: '2-digit',
@@ -166,18 +158,14 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
                     </span>
                   </div>
 
-                  <p className="text-xs sm:text-sm font-medium text-zinc-200 line-clamp-2 leading-relaxed group-hover:text-white transition-colors">
+                  <p className="text-xs sm:text-sm font-medium text-zinc-800 line-clamp-2 leading-relaxed group-hover:text-zinc-900 transition-colors">
                     {log.description}
                   </p>
 
-                  <div className="flex items-center gap-3 mt-2 text-[11px] sm:text-xs text-zinc-400 font-mono">
+                  <div className="flex items-center gap-3 mt-2 text-[11px] sm:text-xs text-zinc-600 font-mono">
                     <span>{formatKm(log.km_hours)}</span>
-                    <span>•</span>
-                    <span className="font-semibold text-emerald-400">
-                      {formatCurrency(log.cost)}
-                    </span>
                     {log.image_url && (
-                      <span className="text-orange-400 flex items-center gap-0.5 text-[10px]">
+                      <span className="text-orange-700 flex items-center gap-0.5 text-[10px]">
                         • <ImageIcon className="w-3 h-3" /> Foto
                       </span>
                     )}
@@ -185,7 +173,7 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
                 </div>
               </div>
 
-              <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all shrink-0" />
+              <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-zinc-700 group-hover:translate-x-0.5 transition-all shrink-0" />
             </Card>
           ))}
         </div>

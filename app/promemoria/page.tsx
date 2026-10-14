@@ -1,51 +1,27 @@
-import React from 'react';
-import Link from 'next/link';
-import { getMainData } from '@/app/actions/maintenance';
 import { getAllBikes } from '@/app/actions/bikes';
-import { calculateStats } from '@/lib/reminders';
+import { getMainData } from '@/app/actions/maintenance';
+import { createClient } from '@/lib/supabase/server';
+import { EmptyGarage } from '@/components/garage/EmptyGarage';
+import { MaintenanceLog, VehicleReminder } from '@/lib/supabase/types';
+import { calculateReminders, sortReminders } from '@/lib/reminders';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { RemindersList } from '@/components/reminders/RemindersList';
-import { Bell, Plus } from 'lucide-react';
-
+import { ReminderManager } from '@/components/reminders/ReminderManager';
 export const dynamic = 'force-dynamic';
-
 export default async function PromemoriaPage() {
-  const { bikes } = await getAllBikes();
-  const { bike, logs } = await getMainData();
-  const stats = calculateStats(bike, logs);
-
-  return (
-    <>
-      <Header bike={bike} alertsCount={stats.alertsTotal} allBikes={bikes} />
-
-      <main className="flex-1 max-w-md md:max-w-5xl lg:max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 md:pt-6 pb-20 md:pb-10">
-        <div className="flex items-center justify-between mb-4 sm:mb-6 px-1">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400">
-                <Bell className="w-5 h-5" />
-              </div>
-              Scadenze & Promemoria
-            </h1>
-            <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-              Controllo automatico intervalli, usura ricambi e chilometraggi target per {bike.name}
-            </p>
-          </div>
-
-          <Link
-            href="/interventi/nuovo"
-            className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-orange-600/20 active:scale-95 transition-all shrink-0"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Nuovo Intervento</span>
-          </Link>
-        </div>
-
-        <RemindersList reminders={stats.reminders} />
-      </main>
-
-      <BottomNav alertsCount={stats.alertsTotal} />
-    </>
-  );
+  const { bikes, isFallback } = await getAllBikes();
+  const { bike } = await getMainData();
+  if (!bike) return <EmptyGarage databaseUnavailable={isFallback} />;
+  let logs: MaintenanceLog[] = [];
+  let scheduled: VehicleReminder[] = [];
+  let error: string | undefined;
+  if (!isFallback) {
+    const db = await createClient();
+    const [history, plans] = await Promise.all([db.from('maintenance_logs').select('*'), db.from('vehicle_reminders').select('*').order('created_at', {ascending:false})]);
+    logs = history.data || []; scheduled = plans.data || [];
+    error = history.error?.message || plans.error?.message;
+  }
+  const reminders = sortReminders(bikes.flatMap(vehicle => calculateReminders(vehicle, logs, scheduled)));
+  const alertsCount = reminders.filter(r => r.status !== 'ok').length;
+  return <><Header bike={bike} alertsCount={alertsCount} allBikes={bikes} /><main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6 pb-24 space-y-6"><div><p className="text-xs font-semibold text-orange-700 uppercase tracking-wider">Tutti i veicoli · gestione interna</p><h1 className="text-2xl font-bold text-zinc-900">Scadenzario del parco veicoli</h1><p className="text-sm text-zinc-600 mt-2">Documenti, bollo, assicurazioni, revisione e manutenzioni. Avvisi per data o chilometraggio, senza importi.</p></div><ReminderManager bikes={bikes} reminders={reminders} scheduled={scheduled} isFallback={isFallback} error={error} /></main><BottomNav alertsCount={alertsCount} /></>;
 }

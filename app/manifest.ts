@@ -2,13 +2,13 @@
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'MotoTracker - Manutenzione Moto',
-    short_name: 'MotoTracker',
-    description: 'App mobile-first per la gestione e il tracciamento della manutenzione moto',
+    name: 'FleetDesk - Gestionale interno',
+    short_name: 'FleetDesk',
+    description: 'Gestionale interno per moto, auto, furgoni e scooter: interventi e scadenze',
     start_url: '/',
     display: 'standalone',
-    background_color: '#09090b',
-    theme_color: '#09090b',
+    background_color: '#fafafa',
+    theme_color: '#fafafa',
     orientation: 'portrait',
     icons: [
       {

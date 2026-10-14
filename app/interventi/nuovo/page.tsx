@@ -1,3 +1,4 @@
+import { EmptyGarage } from '@/components/garage/EmptyGarage';
 import React from 'react';
 import Link from 'next/link';
 import { getMainData } from '@/app/actions/maintenance';
@@ -10,10 +11,12 @@ import { ChevronLeft, Wrench } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
-export default async function NuovoInterventoPage() {
+export default async function NuovoInterventoPage({ searchParams }: { searchParams: Promise<{ vehicle?: string; category?: string }> }) {
+  const params = await searchParams;
   const { bikes } = await getAllBikes();
-  const { bike, logs } = await getMainData();
-  const stats = calculateStats(bike, logs);
+  const { bike, logs, scheduled, isFallback } = await getMainData(params.vehicle);
+  if (!bike) return <EmptyGarage databaseUnavailable={isFallback} />;
+  const stats = calculateStats(bike, logs, scheduled);
 
   return (
     <>
@@ -23,25 +26,25 @@ export default async function NuovoInterventoPage() {
         <div className="flex items-center gap-3 mb-4 sm:mb-6">
           <Link
             href="/interventi"
-            className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
+            className="p-2 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-600 hover:text-zinc-800 hover:border-zinc-200 transition-colors"
             aria-label="Torna agli interventi"
           >
             <ChevronLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400">
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-700">
                 <Wrench className="w-5 h-5" />
               </div>
               Nuovo Intervento
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-400 mt-0.5">
-              Registra lavoro di manutenzione e ricambi per {bike.name}
+            <p className="text-xs sm:text-sm text-zinc-600 mt-0.5">
+              Registra manutenzioni, controlli o adempimenti per {bike.name}
             </p>
           </div>
         </div>
 
-        <MaintenanceForm bike={bike} />
+        <MaintenanceForm key={bike.id} bike={bike} initialCategory={params.category?.slice(0,100)} />
       </main>
 
       <BottomNav alertsCount={stats.alertsTotal} />
