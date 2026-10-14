@@ -2,6 +2,10 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { applyCategoryKit } from './MotorcycleCategoryKits';
 import { Bike, BikeCategory } from '@/lib/supabase/types';
 import {
   RotateCcw,
@@ -15,6 +19,7 @@ import {
   ZoomIn,
   ZoomOut,
   Camera,
+  Loader2,
 } from 'lucide-react';
 
 interface Motorcycle3DViewerProps {
@@ -39,6 +44,7 @@ export function Motorcycle3DViewer({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const [isLoadingModel, setIsLoadingModel] = useState(true);
   const [isAutoRotating, setIsAutoRotating] = useState(autoRotateDefault);
   const [selectedPart, setSelectedPart] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -51,12 +57,12 @@ export function Motorcycle3DViewer({
   const bikeGroupRef = useRef<THREE.Group | null>(null);
   const animationFrameId = useRef<number | null>(null);
 
-  // Interaction state
+  // Interaction state - Calibrated camera distance for heroic presence
   const isDragging = useRef(false);
   const previousPointerPosition = useRef({ x: 0, y: 0 });
   const rotationVelocity = useRef({ x: 0, y: 0 });
-  const rotationAngle = useRef({ x: 0.35, y: -0.75 }); // Initial 3/4 view
-  const cameraDistance = useRef(5.2);
+  const rotationAngle = useRef({ x: 0.18, y: 0.72 }); // Hero front 3/4 showroom view
+  const cameraDistance = useRef(2.70);
   const touchStartDistance = useRef<number | null>(null);
 
   const category = (bike.category || 'naked') as BikeCategory;
@@ -71,20 +77,20 @@ export function Motorcycle3DViewer({
 
     switch (view) {
       case 'threeQuarter':
-        rotationAngle.current = { x: 0.35, y: -0.75 };
-        cameraDistance.current = 5.2;
+        rotationAngle.current = { x: 0.18, y: 0.72 };
+        cameraDistance.current = 2.70;
         break;
       case 'side':
-        rotationAngle.current = { x: 0.05, y: -Math.PI / 2 };
-        cameraDistance.current = 4.8;
+        rotationAngle.current = { x: 0.04, y: 0 };
+        cameraDistance.current = 2.85;
         break;
       case 'front':
-        rotationAngle.current = { x: 0.15, y: 0 };
-        cameraDistance.current = 4.6;
+        rotationAngle.current = { x: 0.08, y: Math.PI / 2 };
+        cameraDistance.current = 2.45;
         break;
       case 'cockpit':
-        rotationAngle.current = { x: 0.7, y: Math.PI * 0.95 };
-        cameraDistance.current = 3.6;
+        rotationAngle.current = { x: 0.32, y: -Math.PI / 2 };
+        cameraDistance.current = 2.20;
         break;
     }
   }, []);
@@ -100,15 +106,17 @@ export function Motorcycle3DViewer({
     const canvas = canvasRef.current;
     if (!container || !canvas) return;
 
+    setIsLoadingModel(true);
+
     // 1. Scene setup
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    // 2. Camera setup
+    // 2. Camera setup - FOV 35 for cinematic perspective compression
     const aspect = container.clientWidth / (container.clientHeight || 300);
-    const camera = new THREE.PerspectiveCamera(38, aspect, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(35, aspect, 0.1, 100);
     cameraRef.current = camera;
-    camera.position.set(0, 1.8, 5.2);
+    camera.position.set(0, 1.2, 2.70);
 
     // 3. Renderer setup
     const renderer = new THREE.WebGLRenderer({
@@ -121,55 +129,85 @@ export function Motorcycle3DViewer({
     renderer.setSize(container.clientWidth, container.clientHeight || 300);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.25;
+    renderer.toneMappingExposure = 1.35;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // 4. Lighting setup (Studio Garage)
+    // 4. Studio Environment Lighting (HDR RoomEnvironment)
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+    const roomEnv = new RoomEnvironment();
+    const envTexture = pmremGenerator.fromScene(roomEnv, 0.04).texture;
+    scene.environment = envTexture;
+
+    // Supplementary Studio Showroom Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     scene.add(ambientLight);
 
-    const mainLight = new THREE.DirectionalLight(0xffffff, 2.5);
-    mainLight.position.set(4, 7, 5);
-    scene.add(mainLight);
+    // Key light (Crisp warm highlights on tank & bodywork)
+    const keyLight = new THREE.DirectionalLight(0xfffaf0, 2.8);
+    keyLight.position.set(4, 6, 4);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 1024;
+    keyLight.shadow.mapSize.height = 1024;
+    scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0x93c5fd, 1.2);
-    fillLight.position.set(-5, 4, -3);
-    scene.add(fillLight);
+    // Front fill light (illuminates front wheel, forks, brake calipers)
+    const frontFillLight = new THREE.DirectionalLight(0xffffff, 1.6);
+    frontFillLight.position.set(5, 1.5, 0);
+    scene.add(frontFillLight);
 
-    const rimLight = new THREE.PointLight(new THREE.Color(primaryColor).getHex(), 3.0, 12);
-    rimLight.position.set(0, 0.5, -3.5);
+    // Cool rim light for silhouette separation
+    const rimLight = new THREE.DirectionalLight(0xdbeafe, 1.8);
+    rimLight.position.set(-4, 3.5, -4);
     scene.add(rimLight);
 
-    // 5. Turntable Pedestal Floor
+    // Ground bounce light
+    const groundBounce = new THREE.DirectionalLight(0x71717a, 0.5);
+    groundBounce.position.set(0, -3, 0);
+    scene.add(groundBounce);
+
+    // Colored showroom accent point light matching primary color
+    const pColor = new THREE.Color(primaryColor);
+    const accentLight = new THREE.PointLight(pColor.getHex(), 2.8, 14);
+    accentLight.position.set(0, 1.2, -3.5);
+    scene.add(accentLight);
+
+    // 5. Turntable Pedestal Floor (Enlarged to 2.85m radius so tires rest safely on stage)
     const turntableGroup = new THREE.Group();
 
-    // Metallic disk
-    const discGeo = new THREE.CylinderGeometry(2.3, 2.4, 0.08, 48);
+    // Metallic brushed disk
+    const discGeo = new THREE.CylinderGeometry(2.75, 2.85, 0.08, 64);
     const discMat = new THREE.MeshStandardMaterial({
-      color: 0x18181b,
-      metalness: 0.85,
-      roughness: 0.25,
+      color: 0x141518,
+      metalness: 0.92,
+      roughness: 0.22,
+      envMapIntensity: 1.0,
     });
     const disc = new THREE.Mesh(discGeo, discMat);
     disc.position.y = -0.96;
+    disc.receiveShadow = true;
     turntableGroup.add(disc);
 
-    // Glowing LED Ring
-    const ringGeo = new THREE.RingGeometry(2.28, 2.34, 48);
+    // Glowing LED Ring matching primary color
+    const ringGeo = new THREE.RingGeometry(2.70, 2.76, 64);
     const ringMat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(primaryColor),
+      color: pColor,
       side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.75,
     });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     ring.rotation.x = -Math.PI / 2;
     ring.position.y = -0.915;
     turntableGroup.add(ring);
 
-    // Soft Shadow
-    const shadowGeo = new THREE.PlaneGeometry(3.6, 1.6);
+    // Soft Ambient Occlusion ground drop shadow under tires
+    const shadowGeo = new THREE.PlaneGeometry(3.8, 2.0);
     const shadowMat = new THREE.MeshBasicMaterial({
-      color: 0x09090b,
+      color: 0x020204,
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.85,
     });
     const shadow = new THREE.Mesh(shadowGeo, shadowMat);
     shadow.rotation.x = -Math.PI / 2;
@@ -178,437 +216,334 @@ export function Motorcycle3DViewer({
 
     scene.add(turntableGroup);
 
-    // 6. Build 3D Motorbike Model
+    // Root Group
     const bikeGroup = new THREE.Group();
     bikeGroupRef.current = bikeGroup;
-
-    // Palette & Materials
-    const pColor = new THREE.Color(primaryColor);
-    const aColor = new THREE.Color(accentColor);
-
-    const bodyPaintMat = new THREE.MeshStandardMaterial({
-      color: pColor,
-      metalness: 0.65,
-      roughness: 0.2,
-    });
-
-    const frameMat = new THREE.MeshStandardMaterial({
-      color: aColor,
-      metalness: 0.8,
-      roughness: 0.35,
-    });
-
-    const chromeMat = new THREE.MeshStandardMaterial({
-      color: 0xe4e4e7,
-      metalness: 0.95,
-      roughness: 0.1,
-    });
-
-    const rubberMat = new THREE.MeshStandardMaterial({
-      color: 0x18181b,
-      roughness: 0.9,
-      metalness: 0.05,
-    });
-
-    const darkEngineMat = new THREE.MeshStandardMaterial({
-      color: 0x27272a,
-      metalness: 0.85,
-      roughness: 0.4,
-    });
-
-    const glassMat = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      transmission: 0.85,
-      opacity: 1,
-      transparent: true,
-      roughness: 0.1,
-      ior: 1.5,
-    });
-
-    const emissiveHeadlightMat = new THREE.MeshBasicMaterial({
-      color: 0xe0f2fe,
-    });
-
-    const emissiveTailMat = new THREE.MeshBasicMaterial({
-      color: 0xef4444,
-    });
-
-    // Height & category adjustments
-    let forkAngle = 0.38; // Default rake
-    let forkLength = 1.35;
-    let groundOffset = 0;
-
-    const isDirtBike = category === 'cross' || category === 'enduro';
-
-    if (category === 'adventure') {
-      forkLength = 1.55;
-      groundOffset = 0.15;
-    } else if (isDirtBike) {
-      forkLength = 1.60;
-      forkAngle = 0.35;
-      groundOffset = 0.20;
-    } else if (category === 'cruiser') {
-      forkAngle = 0.52; // Raked out
-      forkLength = 1.45;
-      groundOffset = -0.08;
-    }
-
-    // --- REAR WHEEL ---
-    const rearWheelGroup = new THREE.Group();
-    rearWheelGroup.name = 'Ruota & Trasmissione';
-    rearWheelGroup.position.set(-1.1, -0.45 + groundOffset, 0);
-
-    const rearTireGeo = new THREE.TorusGeometry(0.48, isDirtBike ? 0.16 : 0.15, 16, 32);
-    const rearTire = new THREE.Mesh(rearTireGeo, rubberMat);
-    rearWheelGroup.add(rearTire);
-
-    const rearRimGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.2, 16);
-    rearRimGeo.rotateX(Math.PI / 2);
-    const rearRim = new THREE.Mesh(rearRimGeo, frameMat);
-    rearWheelGroup.add(rearRim);
-
-    // Rear sprocket & disc
-    const rearDiscGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.02, 16);
-    rearDiscGeo.rotateX(Math.PI / 2);
-    const rearDisc = new THREE.Mesh(rearDiscGeo, chromeMat);
-    rearWheelGroup.add(rearDisc);
-
-    bikeGroup.add(rearWheelGroup);
-
-    // --- FRONT WHEEL ---
-    const frontWheelGroup = new THREE.Group();
-    frontWheelGroup.name = 'Ruota & Freni Anteriori';
-    const frontWheelX = category === 'cruiser' ? 1.35 : (isDirtBike ? 1.20 : 1.15);
-    frontWheelGroup.position.set(frontWheelX, -0.45 + groundOffset, 0);
-
-    const frontTireGeo = new THREE.TorusGeometry(isDirtBike ? 0.51 : 0.48, isDirtBike ? 0.11 : 0.13, 16, 32);
-    const frontTire = new THREE.Mesh(frontTireGeo, rubberMat);
-    frontWheelGroup.add(frontTire);
-
-    const frontRimGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.18, 16);
-    frontRimGeo.rotateX(Math.PI / 2);
-    const frontRim = new THREE.Mesh(frontRimGeo, frameMat);
-    frontWheelGroup.add(frontRim);
-
-    // Dual brake discs front
-    const frontDiscLeft = new THREE.Mesh(rearDiscGeo, chromeMat);
-    frontDiscLeft.position.z = 0.08;
-    frontWheelGroup.add(frontDiscLeft);
-
-    const frontDiscRight = new THREE.Mesh(rearDiscGeo, chromeMat);
-    frontDiscRight.position.z = -0.08;
-    frontWheelGroup.add(frontDiscRight);
-
-    bikeGroup.add(frontWheelGroup);
-
-    // --- SWINGARM (Forcellone) ---
-    const swingarmGeo = new THREE.BoxGeometry(0.9, 0.1, 0.22);
-    const swingarm = new THREE.Mesh(swingarmGeo, frameMat);
-    swingarm.position.set(-0.6, -0.38 + groundOffset, 0);
-    swingarm.rotation.z = -0.12;
-    bikeGroup.add(swingarm);
-
-    // Rear mono-shock spring
-    const shockGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.45, 12);
-    const shockMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.8, roughness: 0.2 });
-    const shock = new THREE.Mesh(shockGeo, shockMat);
-    shock.position.set(-0.45, -0.15 + groundOffset, 0);
-    shock.rotation.z = 0.45;
-    bikeGroup.add(shock);
-
-    // --- ENGINE BLOCK (Motore) ---
-    const engineGroup = new THREE.Group();
-    engineGroup.name = 'Motore & Scarico';
-    engineGroup.position.set(-0.05, -0.28 + groundOffset, 0);
-
-    const crankcaseGeo = new THREE.BoxGeometry(0.65, 0.45, 0.38);
-    const crankcase = new THREE.Mesh(crankcaseGeo, darkEngineMat);
-    engineGroup.add(crankcase);
-
-    // Cylinder heads
-    const cylinderGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.35, 12);
-    const cyl1 = new THREE.Mesh(cylinderGeo, darkEngineMat);
-    cyl1.position.set(0.1, 0.28, 0);
-    cyl1.rotation.z = -0.25;
-    engineGroup.add(cyl1);
-
-    // Exhaust headers & pipe
-    const headerGeo = new THREE.CylinderGeometry(0.045, 0.045, 0.6, 12);
-    const header = new THREE.Mesh(headerGeo, chromeMat);
-    header.position.set(0.22, 0.1, 0.14);
-    header.rotation.z = 0.55;
-    engineGroup.add(header);
-
-    // Exhaust muffler (silencer)
-    const mufflerGeo = new THREE.CylinderGeometry(0.08, 0.11, 0.75, 16);
-    mufflerGeo.rotateZ(Math.PI / 2);
-    const muffler = new THREE.Mesh(mufflerGeo, chromeMat);
-    const mufflerY = isDirtBike ? 0.22 : -0.1;
-    const mufflerZ = isDirtBike ? 0.20 : 0.26;
-    muffler.position.set(-0.7, mufflerY, mufflerZ);
-    muffler.rotation.y = 0.08;
-    muffler.rotation.z = isDirtBike ? 0.10 : 0.25;
-    engineGroup.add(muffler);
-
-    // Carbon tip
-    const tipGeo = new THREE.CylinderGeometry(0.07, 0.08, 0.12, 16);
-    tipGeo.rotateZ(Math.PI / 2);
-    const tip = new THREE.Mesh(tipGeo, frameMat);
-    tip.position.set(-1.08, mufflerY + 0.10, mufflerZ);
-    tip.rotation.z = isDirtBike ? 0.10 : 0.25;
-    engineGroup.add(tip);
-
-    bikeGroup.add(engineGroup);
-
-    // --- MAIN FRAME / CHASSIS ---
-    const frameGroup = new THREE.Group();
-    frameGroup.name = 'Telaio';
-
-    const beam1Geo = new THREE.CylinderGeometry(0.04, 0.04, 0.95, 12);
-    const beam1 = new THREE.Mesh(beam1Geo, frameMat);
-    beam1.position.set(0.35, 0.22 + groundOffset, 0);
-    beam1.rotation.z = 0.8;
-    frameGroup.add(beam1);
-
-    const subframeGeo = new THREE.BoxGeometry(0.8, 0.08, 0.2);
-    const subframe = new THREE.Mesh(subframeGeo, frameMat);
-    subframe.position.set(-0.6, 0.28 + groundOffset, 0);
-    subframe.rotation.z = 0.22;
-    frameGroup.add(subframe);
-
-    bikeGroup.add(frameGroup);
-
-    // --- FUEL TANK & BODYWORK (Serbatoio & Livrea) ---
-    const bodyworkGroup = new THREE.Group();
-    bodyworkGroup.name = 'Serbatoio & Livrea';
-
-    let tankGeo: THREE.BufferGeometry;
-    if (category === 'sport') {
-      tankGeo = new THREE.BoxGeometry(0.85, 0.42, 0.48);
-    } else if (category === 'cruiser') {
-      tankGeo = new THREE.ConeGeometry(0.28, 0.9, 16);
-      tankGeo.rotateZ(Math.PI / 2);
-    } else if (isDirtBike) {
-      tankGeo = new THREE.BoxGeometry(0.58, 0.30, 0.28);
-    } else {
-      tankGeo = new THREE.BoxGeometry(0.75, 0.38, 0.42);
-    }
-
-    const tank = new THREE.Mesh(tankGeo, bodyPaintMat);
-    tank.position.set(0.18, 0.35 + groundOffset, 0);
-    tank.rotation.z = -0.15;
-    bodyworkGroup.add(tank);
-
-    // Profile photo badge on the tank / fairing if uploaded
-    if (imageUrl) {
-      const textureLoader = new THREE.TextureLoader();
-      textureLoader.load(
-        imageUrl,
-        (tex) => {
-          tex.colorSpace = THREE.SRGBColorSpace;
-          const badgeGeo = new THREE.PlaneGeometry(0.32, 0.2);
-          const badgeMat = new THREE.MeshBasicMaterial({
-            map: tex,
-            side: THREE.DoubleSide,
-            transparent: true,
-          });
-
-          // Left badge
-          const badgeLeft = new THREE.Mesh(badgeGeo, badgeMat);
-          badgeLeft.position.set(0.2, 0.38 + groundOffset, 0.22);
-          badgeLeft.rotation.y = 0.05;
-          bodyworkGroup.add(badgeLeft);
-
-          // Right badge
-          const badgeRight = new THREE.Mesh(badgeGeo, badgeMat);
-          badgeRight.position.set(0.2, 0.38 + groundOffset, -0.22);
-          badgeRight.rotation.y = Math.PI - 0.05;
-          bodyworkGroup.add(badgeRight);
-        },
-        undefined,
-        (err) => console.warn('Texture load warning:', err)
-      );
-    }
-
-    // Category specific bodywork:
-    if (category === 'sport') {
-      // Full sports fairing
-      const fairingGeo = new THREE.BoxGeometry(0.65, 0.65, 0.44);
-      const fairing = new THREE.Mesh(fairingGeo, bodyPaintMat);
-      fairing.position.set(0.6, 0.15 + groundOffset, 0);
-      fairing.rotation.z = -0.3;
-      bodyworkGroup.add(fairing);
-
-      // Windscreen
-      const screenGeo = new THREE.CylinderGeometry(0.16, 0.24, 0.35, 16, 1, true, 0, Math.PI);
-      const screen = new THREE.Mesh(screenGeo, glassMat);
-      screen.position.set(0.75, 0.65 + groundOffset, 0);
-      screen.rotation.z = -0.55;
-      screen.rotation.y = -Math.PI / 2;
-      bodyworkGroup.add(screen);
-    } else if (category === 'adventure') {
-      // Touring windscreen
-      const screenGeo = new THREE.PlaneGeometry(0.28, 0.45);
-      const screen = new THREE.Mesh(screenGeo, glassMat);
-      screen.position.set(0.8, 0.78 + groundOffset, 0);
-      screen.rotation.y = Math.PI / 2;
-      screen.rotation.z = -0.2;
-      bodyworkGroup.add(screen);
-
-      // Beak / Front fender
-      const beakGeo = new THREE.ConeGeometry(0.12, 0.45, 12);
-      beakGeo.rotateZ(-Math.PI / 2);
-      const beak = new THREE.Mesh(beakGeo, bodyPaintMat);
-      beak.position.set(0.95, 0.25 + groundOffset, 0);
-      bodyworkGroup.add(beak);
-    } else if (isDirtBike) {
-      // High off-road front mudguard (Parafango alto da fuoristrada)
-      const highFenderGeo = new THREE.ConeGeometry(0.11, 0.68, 12);
-      highFenderGeo.rotateZ(-Math.PI / 2);
-      const highFender = new THREE.Mesh(highFenderGeo, bodyPaintMat);
-      highFender.position.set(frontWheelX - 0.20, 0.32 + groundOffset, 0);
-      highFender.rotation.z = -0.15;
-      bodyworkGroup.add(highFender);
-
-      // Radiator side shrouds (convogliatori serbatoio)
-      const shroudGeo = new THREE.BoxGeometry(0.36, 0.26, 0.04);
-      const shroudLeft = new THREE.Mesh(shroudGeo, bodyPaintMat);
-      shroudLeft.position.set(0.38, 0.28 + groundOffset, 0.16);
-      shroudLeft.rotation.y = 0.22;
-      shroudLeft.rotation.z = -0.22;
-      bodyworkGroup.add(shroudLeft);
-
-      const shroudRight = new THREE.Mesh(shroudGeo, bodyPaintMat);
-      shroudRight.position.set(0.38, 0.28 + groundOffset, -0.16);
-      shroudRight.rotation.y = -0.22;
-      shroudRight.rotation.z = -0.22;
-      bodyworkGroup.add(shroudRight);
-    } else if (category === 'scooter') {
-      // Step-through front apron
-      const apronGeo = new THREE.BoxGeometry(0.3, 0.75, 0.46);
-      const apron = new THREE.Mesh(apronGeo, bodyPaintMat);
-      apron.position.set(0.65, 0.1 + groundOffset, 0);
-      apron.rotation.z = -0.35;
-      bodyworkGroup.add(apron);
-    }
-
-    // Seat
-    let seatGeo: THREE.BufferGeometry;
-    let seatY = 0.36 + groundOffset;
-    let seatX = -0.35;
-    let seatRotZ = 0.12;
-
-    if (isDirtBike) {
-      seatGeo = new THREE.BoxGeometry(0.85, 0.09, 0.22);
-      seatX = -0.18;
-      seatY = 0.35 + groundOffset;
-      seatRotZ = 0.04;
-    } else {
-      seatGeo = new THREE.BoxGeometry(0.65, 0.12, 0.3);
-    }
-
-    const seatMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.95 });
-    const seat = new THREE.Mesh(seatGeo, seatMat);
-    seat.position.set(seatX, seatY, 0);
-    seat.rotation.z = seatRotZ;
-    bodyworkGroup.add(seat);
-
-    // Tail cowl
-    const tailGeo = isDirtBike
-      ? new THREE.ConeGeometry(0.11, 0.68, 12)
-      : new THREE.ConeGeometry(0.16, 0.55, 16);
-    tailGeo.rotateZ(Math.PI / 2);
-    const tail = new THREE.Mesh(tailGeo, bodyPaintMat);
-    tail.position.set(-0.85, 0.44 + groundOffset, 0);
-    tail.rotation.z = isDirtBike ? 0.26 : 0.2;
-    bodyworkGroup.add(tail);
-
-    // Tail light (Enduro has it, Motocross cross bike does not)
-    if (category !== 'cross') {
-      const tailLightGeo = new THREE.BoxGeometry(0.04, 0.08, 0.14);
-      const tailLight = new THREE.Mesh(tailLightGeo, emissiveTailMat);
-      tailLight.position.set(-1.12, 0.48 + groundOffset, 0);
-      bodyworkGroup.add(tailLight);
-    }
-
-    bikeGroup.add(bodyworkGroup);
-
-    // --- FRONT FORKS & COCKPIT ---
-    const forkGroup = new THREE.Group();
-    forkGroup.name = 'Sospensioni & Cockpit';
-
-    const forkStanchionGeo = new THREE.CylinderGeometry(0.035, 0.035, forkLength, 16);
-    const forkMat = new THREE.MeshStandardMaterial({
-      color: (category === 'adventure' || isDirtBike) ? 0xd97706 : 0x71717a,
-      metalness: 0.9,
-      roughness: 0.15,
-    });
-
-    const forkLeft = new THREE.Mesh(forkStanchionGeo, forkMat);
-    forkLeft.position.set(frontWheelX - 0.22, 0.15 + groundOffset, 0.12);
-    forkLeft.rotation.z = -forkAngle;
-    forkGroup.add(forkLeft);
-
-    const forkRight = new THREE.Mesh(forkStanchionGeo, forkMat);
-    forkRight.position.set(frontWheelX - 0.22, 0.15 + groundOffset, -0.12);
-    forkRight.rotation.z = -forkAngle;
-    forkGroup.add(forkRight);
-
-    // Triple clamp
-    const clampGeo = new THREE.BoxGeometry(0.1, 0.06, 0.34);
-    const clamp = new THREE.Mesh(clampGeo, frameMat);
-    clamp.position.set(frontWheelX - 0.42, 0.65 + groundOffset, 0);
-    clamp.rotation.z = -forkAngle;
-    forkGroup.add(clamp);
-
-    // Handlebar
-    const barGeo = new THREE.CylinderGeometry(0.022, 0.022, isDirtBike ? 0.82 : 0.72, 12);
-    barGeo.rotateX(Math.PI / 2);
-    const bar = new THREE.Mesh(barGeo, frameMat);
-    bar.position.set(frontWheelX - 0.42, 0.72 + groundOffset, 0);
-    forkGroup.add(bar);
-
-    if (isDirtBike) {
-      // Protective crossbar pad
-      const padGeo = new THREE.CylinderGeometry(0.038, 0.038, 0.28, 12);
-      padGeo.rotateX(Math.PI / 2);
-      const padMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.9 });
-      const pad = new THREE.Mesh(padGeo, padMat);
-      pad.position.set(frontWheelX - 0.42, 0.77 + groundOffset, 0);
-      forkGroup.add(pad);
-    }
-
-    // TFT Dashboard screen
-    const dashGeo = new THREE.BoxGeometry(0.08, 0.06, 0.12);
-    const dash = new THREE.Mesh(dashGeo, emissiveHeadlightMat);
-    dash.position.set(frontWheelX - 0.44, 0.76 + groundOffset, 0);
-    dash.rotation.z = 0.35;
-    forkGroup.add(dash);
-
-    // Front Light or Race Number Plate
-    if (category === 'cross') {
-      // Front race number plate (Tabella portanumero frontale cross)
-      const plateGeo = new THREE.BoxGeometry(0.03, 0.28, 0.25);
-      const plateMat = new THREE.MeshStandardMaterial({ color: 0xf4f4f5, roughness: 0.3 });
-      const plate = new THREE.Mesh(plateGeo, plateMat);
-      plate.position.set(frontWheelX - 0.24, 0.58 + groundOffset, 0);
-      plate.rotation.z = -forkAngle;
-      forkGroup.add(plate);
-    } else {
-      // Headlight projector
-      const headlightGeo = new THREE.SphereGeometry(0.12, 16, 16);
-      const headlight = new THREE.Mesh(headlightGeo, emissiveHeadlightMat);
-      headlight.position.set(frontWheelX - 0.22, 0.55 + groundOffset, 0);
-      forkGroup.add(headlight);
-    }
-
-    bikeGroup.add(forkGroup);
-
-    // Center bike group
-    bikeGroup.position.set(0, -0.05, 0);
     scene.add(bikeGroup);
 
-    // 7. Raycaster for click / tap inspection
+    // 6. GLTF 3D REALISTIC MODEL LOADING
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('/draco/');
+
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.setDRACOLoader(dracoLoader);
+
+    // Select dedicated realistic GLB model based on category
+    function getGlbModelPath(cat: BikeCategory): string {
+      switch (cat) {
+        case 'naked':
+          return '/models/naked_streetfighter.glb';
+        case 'cross':
+        case 'enduro':
+          return '/models/dirtbike.glb';
+        case 'scooter':
+          return '/models/maxi_scooter.glb';
+        case 'cruiser':
+          return '/models/caferacer.glb';
+        case 'sport':
+        case 'adventure':
+        default:
+          return '/models/sport_motorcycle.glb';
+      }
+    }
+
+    const glbModelPath = getGlbModelPath(category);
+    let isDisposed = false;
+
+    gltfLoader.load(
+      glbModelPath,
+      (gltf) => {
+        if (isDisposed) return;
+
+        const model = gltf.scene;
+
+        // Auto-center and normalize orientation
+        const initialBox = new THREE.Box3().setFromObject(model);
+        const initialSize = initialBox.getSize(new THREE.Vector3());
+
+        // Align along X-axis facing forward (+X)
+        if (category === 'cross' || category === 'enduro') {
+          // dirtbike.glb has length along Z, front at +Z. Rotating +90 deg around Y aligns front to +X
+          model.rotation.y = Math.PI / 2;
+        } else if (category === 'cruiser') {
+          if (initialSize.z > initialSize.x) {
+            model.rotation.y = Math.PI / 2;
+          }
+        } else if (initialSize.z > initialSize.x) {
+          model.rotation.y = Math.PI / 2;
+        }
+
+        // Heroic scale calibrated per vehicle type
+        const recheckRotBox = new THREE.Box3().setFromObject(model);
+        const recheckSize = recheckRotBox.getSize(new THREE.Vector3());
+        const lengthDim = Math.max(recheckSize.x, recheckSize.z);
+
+        let targetLength = 3.25;
+        if (category === 'scooter') targetLength = 2.95;
+        else if (category === 'cross' || category === 'enduro') targetLength = 3.05;
+        else if (category === 'cruiser') targetLength = 3.15;
+        else if (category === 'naked') targetLength = 3.20;
+
+        const scale = targetLength / lengthDim;
+        model.scale.setScalar(scale);
+
+        // Position tires directly on the showroom turntable (-0.91)
+        const finalBox = new THREE.Box3().setFromObject(model);
+        const finalCenter = finalBox.getCenter(new THREE.Vector3());
+
+        model.position.x = -finalCenter.x;
+        model.position.y = -finalBox.min.y - 0.91;
+        model.position.z = -finalCenter.z;
+
+        // Category-specific hardware kits
+        applyCategoryKit(bikeGroup, model, category, primaryColor, accentColor);
+
+        // Precision material calibration tailored to each model's native materials
+        model.traverse((child: THREE.Object3D) => {
+          if ((child as THREE.Mesh).isMesh) {
+            const mesh = child as THREE.Mesh;
+            const originalMat = mesh.material as THREE.Material;
+            const matName = originalMat?.name?.toLowerCase() || '';
+            const meshName = mesh.name.toLowerCase();
+
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            // --- 1. NAKED / ROADSTER (naked_streetfighter.glb) ---
+            if (category === 'naked') {
+              if (
+                matName.includes('carpaint') ||
+                matName.includes('streetfighter') ||
+                meshName.includes('object_4') ||
+                meshName.includes('object_19')
+              ) {
+                const pMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                pMat.map = null; // Clear baked-in red texture decal so primaryColor reflects cleanly
+                pMat.color = new THREE.Color(primaryColor);
+                pMat.metalness = 0.45;
+                pMat.roughness = 0.16;
+                pMat.envMapIntensity = 1.45;
+                pMat.needsUpdate = true;
+                mesh.material = pMat;
+                mesh.name = 'Carrozzeria Streetfighter (Livrea Principale)';
+              } else if (
+                matName.includes('add') ||
+                matName.includes('mat.8') ||
+                matName.includes('mat.9') ||
+                meshName.includes('object_5')
+              ) {
+                const aMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                const effectiveAccent = accentColor && accentColor !== '#18181b' ? accentColor : '#25262c';
+                aMat.color = new THREE.Color(effectiveAccent);
+                aMat.metalness = 0.50;
+                aMat.roughness = 0.22;
+                mesh.material = aMat;
+                mesh.name = 'Dettagli & Finiture Naked';
+              } else if (matName.includes('engine')) {
+                mesh.name = 'Motore V4 Meccanico a Vista';
+              } else if (matName.includes('tire') || matName.includes('tyre')) {
+                mesh.name = 'Pneumatici Sportivi ad Alto Grip';
+              } else if (matName.includes('brake') || matName.includes('disk')) {
+                mesh.name = 'Impianto Frenante Brembo Radiale';
+              } else if (matName.includes('exhaust')) {
+                mesh.name = 'Scarico Sportivo Naked';
+              }
+            }
+
+            // --- 2. ENDURO & CROSS (dirtbike.glb) ---
+            else if (category === 'cross' || category === 'enduro') {
+              if (matName.includes('material.001') || matName.includes('material.004')) {
+                const pMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                pMat.color = new THREE.Color(primaryColor);
+                pMat.metalness = 0.18;
+                pMat.roughness = 0.32;
+                pMat.envMapIntensity = 1.25;
+                mesh.material = pMat;
+                mesh.name = category === 'cross' ? 'Plastiche & Serbatoio Cross' : 'Plastiche & Serbatoio Enduro';
+              } else if (matName.includes('secdry')) {
+                const aMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                const effectiveAccent =
+                  accentColor && accentColor !== '#18181b'
+                    ? accentColor
+                    : category === 'cross'
+                    ? '#ffffff'
+                    : '#18181b';
+                aMat.color = new THREE.Color(effectiveAccent);
+                aMat.metalness = 0.10;
+                aMat.roughness = 0.40;
+                mesh.material = aMat;
+                mesh.name = category === 'cross' ? 'Tabella Portanumero Gara (Bianco)' : 'Inserti & Grafiche Enduro';
+              } else if (matName.includes('tyre')) {
+                mesh.name = 'Pneumatici Tassellati da Fuoristrada';
+              } else if (matName.includes('metal')) {
+                mesh.name = 'Telaio & Cerchi a Raggi Rinforzati';
+              } else if (matName.includes('exh') || matName.includes('material.003')) {
+                mesh.name = 'Espansione & Scarico Racing Fuoristrada';
+              }
+            }
+
+            // --- 3. MAXI SCOOTER / URBAN (maxi_scooter.glb) ---
+            else if (category === 'scooter') {
+              if (
+                matName.includes('black graphite molded paint') ||
+                meshName.includes('trapezoid') ||
+                meshName.includes('cover') ||
+                meshName.includes('sill')
+              ) {
+                const pMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                pMat.color = new THREE.Color(primaryColor);
+                pMat.metalness = 0.38;
+                pMat.roughness = 0.20;
+                pMat.envMapIntensity = 1.35;
+                mesh.material = pMat;
+                mesh.name = 'Scudo & Carrozzeria Maxi-Scooter';
+              } else if (
+                matName.includes('red painted accents') ||
+                meshName.includes('shock_collar') ||
+                meshName.includes('terminus')
+              ) {
+                const aMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                const effectiveAccent = accentColor && accentColor !== '#18181b' ? accentColor : '#e11d48';
+                aMat.color = new THREE.Color(effectiveAccent);
+                aMat.metalness = 0.45;
+                aMat.roughness = 0.22;
+                mesh.material = aMat;
+                mesh.name = 'Profili & Dettagli Sportivi Scooter';
+              } else if (matName.includes('footmat') || matName.includes('footwell') || matName.includes('tread')) {
+                mesh.name = 'Pedana Sagomata Antiscivolo';
+              } else if (matName.includes('upholstery') || matName.includes('saddle')) {
+                mesh.name = 'Sella Comfort Bi-Posto Scooter';
+              } else if (matName.includes('polycarbonate') || matName.includes('window') || matName.includes('lens')) {
+                mesh.name = 'Cupolino & Gruppo Ottico LED';
+              } else if (matName.includes('aluminium')) {
+                mesh.name = 'Leva Freni & Componenti Meccanici';
+              }
+            }
+
+            // --- 4. CAFE RACER / CRUISER (caferacer.glb) ---
+            else if (category === 'cruiser') {
+              if (matName.includes('purple')) {
+                const cMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                cMat.color = new THREE.Color(primaryColor);
+                cMat.metalness = 0.35;
+                cMat.roughness = 0.14;
+                cMat.envMapIntensity = 1.45;
+                mesh.material = cMat;
+                mesh.name = 'Serbatoio a Goccia & Codone Custom';
+              } else if (matName.includes('car paint - black solid')) {
+                const fMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                const effectiveAccent = accentColor && accentColor !== '#18181b' ? accentColor : '#18191e';
+                fMat.color = new THREE.Color(effectiveAccent);
+                fMat.envMapIntensity = 1.15;
+                mesh.material = fMat;
+                mesh.name = 'Telaio Tubolare Custom';
+              } else if (matName.includes('chrome')) {
+                if ('envMapIntensity' in (mesh.material as any)) {
+                  (mesh.material as any).envMapIntensity = 2.4;
+                }
+                mesh.name = 'Motore & Terminali di Scarico Cromati';
+              } else if (matName.includes('leather')) {
+                mesh.name = 'Sella Artigianale in Pelle';
+              } else if (matName.includes('rubber')) {
+                mesh.name = 'Pneumatici Tradizionali Vintage';
+              } else if (matName.includes('glass')) {
+                mesh.name = 'Faro Tondo Tradizionale';
+              }
+            }
+
+            // --- 5. SPORT / SUPERSPORT & ADVENTURE (sport_motorcycle.glb) ---
+            else {
+              if (matName.includes('carpaint.001')) {
+                const pMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                pMat.color = new THREE.Color(primaryColor);
+                pMat.metalness = 0.38;
+                pMat.roughness = 0.15;
+                pMat.envMapIntensity = 1.45;
+                mesh.material = pMat;
+                mesh.name =
+                  category === 'adventure'
+                    ? 'Serbatoio & Carenatura Adventure'
+                    : 'Carrozzeria & Serbatoio (Livrea Principale)';
+              } else if (matName.includes('carpaint_second')) {
+                const sMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                const effectiveAccent = accentColor && accentColor !== '#18181b' ? accentColor : '#25262c';
+                sMat.color = new THREE.Color(effectiveAccent);
+                sMat.metalness = 0.42;
+                sMat.roughness = 0.20;
+                sMat.envMapIntensity = 1.25;
+                mesh.material = sMat;
+                mesh.name = 'Inserti Carenatura & Dettagli Livrea';
+              } else if (matName.includes('rim_second')) {
+                const rMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                rMat.color = new THREE.Color(0x222328);
+                rMat.metalness = 0.82;
+                rMat.roughness = 0.28;
+                mesh.material = rMat;
+                mesh.name = 'Cerchi in Lega Metallizzata';
+              } else if (mesh.name?.includes('decal_rim') || (matName.includes('red') && mesh.name?.includes('rim'))) {
+                const decMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                decMat.color = new THREE.Color(primaryColor);
+                decMat.metalness = 0.40;
+                decMat.roughness = 0.20;
+                mesh.material = decMat;
+                mesh.name = 'Filetto Sportivo Cerchi';
+              } else if (matName.includes('chrome')) {
+                if ('envMapIntensity' in (mesh.material as any)) {
+                  (mesh.material as any).envMapIntensity = 2.2;
+                  (mesh.material as any).roughness = 0.05;
+                  (mesh.material as any).metalness = 0.98;
+                }
+                mesh.name = 'Scarico Cromato & Specchietti';
+              } else if (matName.includes('gold')) {
+                if ('envMapIntensity' in (mesh.material as any)) {
+                  (mesh.material as any).envMapIntensity = 1.6;
+                  (mesh.material as any).roughness = 0.18;
+                  (mesh.material as any).metalness = 0.92;
+                }
+                mesh.name = 'Forcelle Steli Rovesciati Gold';
+              } else if (matName.includes('brakedisk')) {
+                if ('envMapIntensity' in (mesh.material as any)) {
+                  (mesh.material as any).envMapIntensity = 1.7;
+                  (mesh.material as any).roughness = 0.12;
+                  (mesh.material as any).metalness = 0.95;
+                }
+                mesh.name = 'Dischi Freno Forati ad Alte Prestazioni';
+              } else if (matName.includes('mattemetal')) {
+                if ('envMapIntensity' in (mesh.material as any)) {
+                  (mesh.material as any).envMapIntensity = 1.35;
+                }
+                mesh.name = 'Alluminio Meccanico Spazzolato';
+              } else if (matName.includes('black')) {
+                if ('envMapIntensity' in (mesh.material as any)) {
+                  (mesh.material as any).envMapIntensity = 1.05;
+                }
+                mesh.name = 'Motore & Telaio Nero Satinato';
+              } else if (matName.includes('glass')) {
+                if ('envMapIntensity' in (mesh.material as any)) {
+                  (mesh.material as any).envMapIntensity = 1.6;
+                }
+                mesh.name = 'Gruppo Ottico & Cupolino';
+              } else if (matName.includes('tire')) {
+                mesh.name = 'Pneumatici Sportivi ad Alto Grip';
+              }
+            }
+          }
+        });
+
+        // Add model to scene
+        bikeGroup.add(model);
+        setIsLoadingModel(false);
+      },
+      undefined,
+      (err) => {
+        console.warn('GLB load error, check network or asset path:', err);
+        if (!isDisposed) {
+          setIsLoadingModel(false);
+        }
+      }
+    );
+
+    // 8. Raycaster for click / tap inspection
     const raycaster = new THREE.Raycaster();
     const mouseVector = new THREE.Vector2();
 
@@ -622,11 +557,10 @@ export function Motorcycle3DViewer({
       const intersects = raycaster.intersectObjects(bikeGroup.children, true);
 
       if (intersects.length > 0) {
-        // Find parent group with meaningful name
         let target: THREE.Object3D | null = intersects[0].object;
         let foundName = target.name;
         while (target && target.parent && target !== bikeGroup) {
-          if (target.name) {
+          if (target.name && !target.name.startsWith('Mesh') && !target.name.startsWith('Object')) {
             foundName = target.name;
             break;
           }
@@ -641,19 +575,19 @@ export function Motorcycle3DViewer({
 
     canvas.addEventListener('click', handleCanvasClick);
 
-    // 8. Animation & Render Loop
+    // 9. Animation & Render Loop
     let lastTime = performance.now();
 
     const animate = (time: number) => {
       const delta = (time - lastTime) / 1000;
       lastTime = time;
 
-      // Handle auto-rotation
+      // Auto-rotation in showroom mode
       if (isAutoRotating && !isDragging.current) {
-        rotationAngle.current.y += delta * 0.45;
+        rotationAngle.current.y += delta * 0.42;
       }
 
-      // Apply inertia damping
+      // Inertia physics damping
       if (!isDragging.current) {
         rotationAngle.current.y += rotationVelocity.current.y;
         rotationAngle.current.x += rotationVelocity.current.x;
@@ -662,10 +596,10 @@ export function Motorcycle3DViewer({
         rotationVelocity.current.x *= 0.92;
       }
 
-      // Clamp vertical pitch (prevent flipping)
+      // Pitch clamping
       rotationAngle.current.x = Math.max(-0.25, Math.min(0.85, rotationAngle.current.x));
 
-      // Calculate camera position around center based on angles and distance
+      // Spherical camera positioning
       const dist = cameraDistance.current;
       const rotY = rotationAngle.current.y;
       const rotX = rotationAngle.current.x;
@@ -674,7 +608,7 @@ export function Motorcycle3DViewer({
       camera.position.y = dist * Math.sin(rotX) + 0.35;
       camera.position.z = dist * Math.cos(rotY) * Math.cos(rotX);
 
-      camera.lookAt(0, 0.25, 0);
+      camera.lookAt(0, 0.22, 0);
 
       renderer.render(scene, camera);
       animationFrameId.current = requestAnimationFrame(animate);
@@ -682,7 +616,7 @@ export function Motorcycle3DViewer({
 
     animationFrameId.current = requestAnimationFrame(animate);
 
-    // 9. Resize Observer
+    // 10. Responsive Resize Observer
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
@@ -696,12 +630,15 @@ export function Motorcycle3DViewer({
 
     resizeObserver.observe(container);
 
-    // Cleanup
+    // Cleanup WebGL resources
     return () => {
+      isDisposed = true;
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
       resizeObserver.disconnect();
       canvas.removeEventListener('click', handleCanvasClick);
+      pmremGenerator.dispose();
       renderer.dispose();
+      dracoLoader.dispose();
       scene.clear();
     };
   }, [category, primaryColor, accentColor, imageUrl, isAutoRotating, onPartClick]);
@@ -739,10 +676,10 @@ export function Motorcycle3DViewer({
   const handleWheel = (e: React.WheelEvent) => {
     if (!interactive) return;
     e.preventDefault();
-    cameraDistance.current = Math.max(2.8, Math.min(8.5, cameraDistance.current + e.deltaY * 0.003));
+    cameraDistance.current = Math.max(2.4, Math.min(7.5, cameraDistance.current + e.deltaY * 0.003));
   };
 
-  // Touch gestures (Single finger rotation + Pinch to zoom)
+  // Pinch-to-zoom on mobile touch screens
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       handlePointerDown(e.touches[0].clientX, e.touches[0].clientY);
@@ -762,7 +699,7 @@ export function Motorcycle3DViewer({
       const currentDist = Math.sqrt(dx * dx + dy * dy);
       const diff = touchStartDistance.current - currentDist;
 
-      cameraDistance.current = Math.max(2.8, Math.min(8.5, cameraDistance.current + diff * 0.01));
+      cameraDistance.current = Math.max(2.4, Math.min(7.5, cameraDistance.current + diff * 0.01));
       touchStartDistance.current = currentDist;
     }
   };
@@ -794,37 +731,47 @@ export function Motorcycle3DViewer({
         onWheel={handleWheel}
       />
 
+      {/* Loading Overlay */}
+      {isLoadingModel && (
+        <div className="absolute inset-0 bg-zinc-950/70 backdrop-blur-xs flex flex-col items-center justify-center gap-2.5 z-20 pointer-events-none transition-opacity duration-300">
+          <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
+          <span className="text-xs font-semibold text-zinc-300 tracking-tight">
+            Rendering Modello 3D Realistico...
+          </span>
+        </div>
+      )}
+
       {/* Top Overlay Badge & Header Info */}
-      <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-        <div className="flex items-center gap-2 bg-zinc-950/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-zinc-800/90 shadow-sm pointer-events-auto">
+      <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
+        <div className="flex items-center gap-2 bg-zinc-950/85 backdrop-blur-md px-3 py-1.5 rounded-xl border border-zinc-800/90 shadow-md pointer-events-auto">
           <div
-            className="w-3 h-3 rounded-full ring-2 ring-zinc-800 shadow-inner"
+            className="w-3.5 h-3.5 rounded-full ring-2 ring-zinc-800 shadow-inner"
             style={{ backgroundColor: primaryColor }}
-            title={`Colore carrozzeria: ${primaryColor}`}
+            title={`Colore livrea: ${primaryColor}`}
           />
           <span className="text-xs font-bold text-zinc-100 tracking-tight">
             {bike.name || 'Modello 3D Moto'}
           </span>
-          <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-orange-400 font-semibold border border-zinc-700">
+          <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-zinc-800/90 text-orange-400 font-bold border border-zinc-700/80">
             {category}
           </span>
         </div>
 
         {/* 3D Interactive Badge */}
-        <div className="flex items-center gap-1.5 bg-zinc-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-zinc-800 text-[11px] text-zinc-400 font-medium pointer-events-auto">
-          <Sparkles className="w-3 h-3 text-orange-400 animate-pulse" />
-          <span className="hidden sm:inline">3D 360° Studio</span>
+        <div className="flex items-center gap-1.5 bg-zinc-950/85 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-zinc-800 text-[11px] text-zinc-300 font-semibold pointer-events-auto shadow-md">
+          <Sparkles className="w-3.5 h-3.5 text-orange-400 animate-pulse" />
+          <span className="hidden sm:inline">3D Studio Showroom</span>
         </div>
       </div>
 
       {/* Selected Component Inspection Chip */}
       {selectedPart && (
-        <div className="absolute top-14 left-3 bg-orange-950/70 backdrop-blur-md border border-orange-500/40 text-orange-200 text-xs px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-          <Info className="w-3.5 h-3.5 text-orange-400" />
-          <span className="font-semibold">{selectedPart}</span>
+        <div className="absolute top-14 left-3 bg-zinc-950/90 backdrop-blur-md border border-orange-500/50 text-orange-300 text-xs px-3 py-1.5 rounded-xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 z-10">
+          <Info className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+          <span className="font-semibold text-zinc-100">{selectedPart}</span>
           <button
             onClick={() => setSelectedPart(null)}
-            className="text-orange-400 hover:text-white ml-1 text-xs"
+            className="text-orange-400 hover:text-white ml-1 text-xs font-bold px-1"
           >
             ✕
           </button>
@@ -832,19 +779,19 @@ export function Motorcycle3DViewer({
       )}
 
       {/* Hint touch bar */}
-      <div className="absolute bottom-3 left-3 pointer-events-none text-[10px] text-zinc-400 bg-zinc-950/70 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-zinc-800/80 hidden sm:flex items-center gap-1.5">
-        <Layers className="w-3 h-3 text-orange-400" />
-        <span>Trascina per ruotare • Clicca sui componenti</span>
+      <div className="absolute bottom-3 left-3 pointer-events-none text-[10px] text-zinc-400 bg-zinc-950/75 backdrop-blur-md px-3 py-1.5 rounded-xl border border-zinc-800/80 hidden sm:flex items-center gap-2 z-10">
+        <Layers className="w-3.5 h-3.5 text-orange-400" />
+        <span>Trascina per ruotare 360° • Clicca sui componenti</span>
       </div>
 
       {/* Bottom Floating Control Toolbar */}
       {showControls && (
-        <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-zinc-950/85 backdrop-blur-md p-1.5 rounded-xl border border-zinc-800/90 shadow-xl">
+        <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-zinc-950/90 backdrop-blur-md p-1.5 rounded-2xl border border-zinc-800/90 shadow-2xl z-10">
           {/* Camera Presets Menu */}
           <div className="hidden sm:flex items-center gap-1 border-r border-zinc-800 pr-1.5 mr-0.5">
             <button
               onClick={() => setCameraPreset('threeQuarter')}
-              title="Vista 3/4"
+              title="Vista 3/4 Showroom"
               className={`p-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeCameraView === 'threeQuarter'
                   ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
@@ -855,7 +802,7 @@ export function Motorcycle3DViewer({
             </button>
             <button
               onClick={() => setCameraPreset('side')}
-              title="Vista Laterale"
+              title="Vista Profilo Laterale"
               className={`px-2 py-1 rounded-lg text-[10px] font-semibold transition-all ${
                 activeCameraView === 'side'
                   ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
@@ -875,17 +822,28 @@ export function Motorcycle3DViewer({
             >
               Fronte
             </button>
+            <button
+              onClick={() => setCameraPreset('cockpit')}
+              title="Vista Cockpit & Manubrio"
+              className={`px-2 py-1 rounded-lg text-[10px] font-semibold transition-all ${
+                activeCameraView === 'cockpit'
+                  ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-850'
+              }`}
+            >
+              Guida
+            </button>
           </div>
 
           {/* Auto Rotate Toggle */}
           <button
             onClick={() => setIsAutoRotating(!isAutoRotating)}
-            className={`p-2 rounded-lg text-xs transition-colors ${
+            className={`p-2 rounded-xl text-xs transition-all ${
               isAutoRotating
-                ? 'bg-orange-600/30 text-orange-400 border border-orange-500/30'
+                ? 'bg-orange-600/30 text-orange-400 border border-orange-500/30 shadow-sm'
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
             }`}
-            title={isAutoRotating ? 'Metti in pausa rotazione' : 'Avvia rotazione showroom'}
+            title={isAutoRotating ? 'Pausa rotazione showroom' : 'Avvia rotazione 360°'}
             aria-label="Toggle rotazione"
           >
             {isAutoRotating ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
@@ -894,10 +852,10 @@ export function Motorcycle3DViewer({
           {/* Zoom In */}
           <button
             onClick={() => {
-              cameraDistance.current = Math.max(2.8, cameraDistance.current - 0.6);
+              cameraDistance.current = Math.max(2.4, cameraDistance.current - 0.4);
             }}
-            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
-            title="Ingrandisci"
+            className="p-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+            title="Ingrandisci zoom"
             aria-label="Zoom in"
           >
             <ZoomIn className="w-3.5 h-3.5" />
@@ -906,10 +864,10 @@ export function Motorcycle3DViewer({
           {/* Zoom Out */}
           <button
             onClick={() => {
-              cameraDistance.current = Math.min(8.5, cameraDistance.current + 0.6);
+              cameraDistance.current = Math.min(7.5, cameraDistance.current + 0.4);
             }}
-            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
-            title="Riduci"
+            className="p-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+            title="Riduci zoom"
             aria-label="Zoom out"
           >
             <ZoomOut className="w-3.5 h-3.5" />
@@ -918,9 +876,9 @@ export function Motorcycle3DViewer({
           {/* Reset Camera */}
           <button
             onClick={resetCamera}
-            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
-            title="Reimposta vista"
-            aria-label="Reset vista"
+            className="p-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+            title="Ripristina visuale 3/4"
+            aria-label="Reset visuale"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
@@ -928,8 +886,8 @@ export function Motorcycle3DViewer({
           {/* Fullscreen Toggle */}
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
-            title={isFullscreen ? 'Riduci' : 'Schermo intero'}
+            className="p-2 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+            title={isFullscreen ? 'Riduci finestra' : 'Visualizza a schermo intero'}
             aria-label="Toggle schermo intero"
           >
             {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}

@@ -170,14 +170,14 @@ export function GarageFleetView({ bikes: initialBikes, activeBikeId: initialActi
           <div className="relative rounded-2xl overflow-hidden border border-zinc-800/80 bg-zinc-950">
             {showcaseMode === '3d' ? (
               <Motorcycle3DViewer
-                key={showcasedBike.id + showcasedBike.primary_color + (showcasedBike.image_url || '')}
+                key={`${showcasedBike.id}_${showcasedBike.category || 'naked'}_${showcasedBike.primary_color || ''}_${showcasedBike.accent_color || ''}`}
                 bike={showcasedBike}
-                height={340}
+                height={410}
                 showControls={true}
                 autoRotateDefault={true}
               />
             ) : (
-              <div className="h-[340px] w-full relative flex items-center justify-center bg-zinc-950/90 overflow-hidden">
+              <div className="h-[410px] w-full relative flex items-center justify-center bg-zinc-950/90 overflow-hidden">
                 {showcasedBike.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
