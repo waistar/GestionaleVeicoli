@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'GestionaleVeicoli - Gestionale interno',
     short_name: 'GestionaleVeicoli',
-    description: 'Gestionale interno per moto, auto, furgoni e scooter: interventi e scadenze',
+    description: 'Scadenze, documenti e spese del parco veicoli',
     start_url: '/',
     display: 'standalone',
     background_color: '#fafafa',
@@ -22,6 +22,12 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
+      },
+      {
+        src: '/icons/icon-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
       },
     ],
   }

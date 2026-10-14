@@ -5,12 +5,12 @@ import { LayoutDashboard, Wrench, Bell, Warehouse, Wallet, FileArchive } from 'l
 export function BottomNav({ alertsCount = 0 }: { alertsCount?: number }) {
   const pathname = usePathname();
   const links = [
-    { href: '/', label: 'Pannello', Icon: LayoutDashboard },
+    { href: '/', label: 'Home', Icon: LayoutDashboard },
     { href: '/garage', label: 'Veicoli', Icon: Warehouse },
     { href: '/promemoria', label: 'Scadenze', Icon: Bell },
-    { href: '/documenti', label: 'Archivio', Icon: FileArchive },
     { href: '/spese', label: 'Spese', Icon: Wallet },
-    { href: '/interventi', label: 'Storico', Icon: Wrench },
+    { href: '/documenti', label: 'Documenti', Icon: FileArchive },
+    { href: '/interventi', label: 'Extra', Icon: Wrench },
   ];
   return <nav aria-label="Navigazione mobile" className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-zinc-200 px-1 py-1.5 pb-safe md:hidden"><div className="max-w-lg mx-auto grid grid-cols-6">{links.map(({href, label, Icon}) => {
     const active = href === '/' ? pathname === '/' || pathname.startsWith('/veicoli/') : pathname.startsWith(href);

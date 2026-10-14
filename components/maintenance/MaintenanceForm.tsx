@@ -200,7 +200,7 @@ export function MaintenanceForm({ bike, initialCategory = 'Meccanica' }: Mainten
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Es: Cambio olio motore Motul 7100 10W50, sostituzione filtro olio originale, pulizia e ingrassaggio catena..."
+              placeholder="Es. Sostituzione alternatore, ricambi utilizzati e lavoro eseguito..."
               className="bg-white border-zinc-200 text-zinc-900 text-sm min-h-[100px] resize-none"
               required
             />

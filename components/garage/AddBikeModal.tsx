@@ -14,16 +14,12 @@ import { Label } from '@/components/ui/label';
 import { VEHICLE_TYPES, type VehicleType } from '@/lib/vehicle-catalog';
 import { INITIAL_DEADLINE_FIELDS } from '@/lib/initial-deadlines';
 import { Bike } from '@/lib/supabase/types';
-import { extractDominantColor } from '@/lib/image-colors';
 import { createBike } from '@/app/actions/bikes';
-import { VehicleViewer } from './VehicleViewer';
 import {
   Upload,
   Camera,
   CarFront,
-  Sparkles,
   Loader2,
-  Palette,
   AlertCircle,
   CalendarClock,
   X,
@@ -35,17 +31,6 @@ interface AddBikeModalProps {
   onBikeCreated?: (bike: Bike) => void;
 }
 
-const PRESET_COLORS = [
-  { name: 'Blu', hex: '#0284c7' },
-  { name: 'Rosso', hex: '#dc2626' },
-  { name: 'Verde', hex: '#16a34a' },
-  { name: 'Arancione', hex: '#ea580c' },
-  { name: 'Blu intenso', hex: '#2563eb' },
-  { name: 'Nero', hex: '#27272a' },
-  { name: 'Grigio', hex: '#94a3b8' },
-  { name: 'Giallo', hex: '#eab308' },
-];
-
 export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModalProps) {
   const [vehicleTypeValue, setVehicleType] = useState<VehicleType>('auto');
   const [plate, setPlate] = useState('');
@@ -53,19 +38,14 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
   const [model, setModel] = useState('');
   const [year, setYear] = useState('');
   const [kmHours, setKmHours] = useState('');
-  const [primaryColor, setPrimaryColor] = useState('#0284c7');
-  const [accentColor, setAccentColor] = useState('#18181b');
-  const [extractedPalette, setExtractedPalette] = useState<string[]>([]);
-
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isExtractingColor, setIsExtractingColor] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageChange = async (file: File | null) => {
+  const handleImageChange = (file: File | null) => {
     if (!file) return;
 
     if (previewUrl && previewUrl.startsWith('blob:')) {
@@ -75,19 +55,6 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
     const objectUrl = URL.createObjectURL(file);
     setSelectedFile(file);
     setPreviewUrl(objectUrl);
-    setIsExtractingColor(true);
-
-    try {
-      const { primaryColor: detected, accentColor: detectedAccent, palette } =
-        await extractDominantColor(file);
-      setPrimaryColor(detected);
-      setAccentColor(detectedAccent);
-      setExtractedPalette(palette);
-    } catch (err) {
-      console.warn('Color extraction warning:', err);
-    } finally {
-      setIsExtractingColor(false);
-    }
   };
 
   const handleRemovePhoto = () => {
@@ -96,7 +63,6 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
     }
     setSelectedFile(null);
     setPreviewUrl(null);
-    setExtractedPalette([]);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -123,8 +89,8 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
       formData.set('model', model.trim());
       if (year.trim()) formData.append('year', year.trim());
       formData.set('current_km_hours', kmHours.trim() || '0');
-      formData.set('primary_color', primaryColor);
-      formData.set('accent_color', accentColor);
+      formData.set('primary_color', '#ea580c');
+      formData.set('accent_color', '#18181b');
 
       if (selectedFile) {
         formData.append('image', selectedFile);
@@ -158,8 +124,6 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
     setModel('');
     setYear('');
     setKmHours('');
-    setPrimaryColor('#0284c7');
-    setAccentColor('#18181b');
     handleRemovePhoto();
     setErrorMessage(null);
   };
@@ -191,35 +155,30 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
             </div>
           )}
 
-          {/* SECTION 1: Photo Upload & Color Extraction */}
+          {/* Foto facoltativa */}
           <div className="space-y-3">
             <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-700 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
                 <Camera className="w-3.5 h-3.5 text-orange-700" />
-                1. Foto Profilo Iniziale
+                Foto del veicolo
               </span>
               <span className="text-[11px] text-zinc-500 normal-case">Foto del veicolo (facoltativa)</span>
             </Label>
 
             {previewUrl ? (
               <div className="relative rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-50 p-2 flex items-center gap-4">
-                <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shrink-0 border border-zinc-200 bg-white">
+                <div className="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 border border-zinc-200 bg-white">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={previewUrl}
                     alt="Anteprima foto veicolo"
                     className="w-full h-full object-cover"
                   />
-                  {isExtractingColor && (
-                    <div className="absolute inset-0 bg-white/80 backdrop-blur-xs flex items-center justify-center">
-                      <Loader2 className="w-5 h-5 text-orange-700 animate-spin" />
-                    </div>
-                  )}
                 </div>
 
-                <div className="flex-1 space-y-2">
+                <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-800">Foto Caricata</span>
+                    <span className="text-xs font-bold text-zinc-800">Foto caricata</span>
                     <button
                       type="button"
                       onClick={handleRemovePhoto}
@@ -229,20 +188,7 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
                     </button>
                   </div>
 
-                  <p className="text-[11px] text-zinc-600">
-                    Colore rilevato dalla carrozzeria:
-                  </p>
-
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-5 h-5 rounded-md border border-zinc-200 shadow-sm"
-                      style={{ backgroundColor: primaryColor }}
-                    />
-                    <span className="text-xs font-mono font-semibold text-zinc-800">{primaryColor}</span>
-                    <span className="text-[10px] text-emerald-700 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> Auto-rilevato
-                    </span>
-                  </div>
+                  <p className="text-[11px] text-zinc-600 mt-1">Verrà usata nella scheda del veicolo.</p>
                 </div>
               </div>
             ) : (
@@ -277,34 +223,11 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
             />
           </div>
 
-          {/* SECTION 2: VEHICLE PHOTO PREVIEW */}
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-700 flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-orange-700" />
-                2. Foto del veicolo
-              </span>
-              <span className="text-[10px] text-orange-700 font-mono">Scheda veicolo</span>
-            </Label>
-
-            <VehicleViewer
-              bike={{
-                name: name || 'Nuovo veicolo',
-                vehicle_type: vehicleTypeValue,
-                plate,
-                primary_color: primaryColor,
-                accent_color: accentColor,
-                image_url: previewUrl,
-              }}
-              height={220}
-            />
-          </div>
-
-          {/* SECTION 3: BIKE SPECS */}
+          {/* Dati del veicolo */}
           <div className="space-y-3">
             <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-700 flex items-center gap-1.5">
               <CarFront className="w-3.5 h-3.5 text-orange-700" />
-              3. Dati Principali del Veicolo
+              Dati del veicolo
             </Label>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -363,12 +286,12 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
             </div>
           </div>
 
-          {/* SECTION 4: INITIAL DEADLINES */}
+          {/* Scadenze iniziali */}
           <section className="space-y-4 rounded-2xl border border-orange-200 bg-orange-50/50 p-4">
             <div>
               <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-800 flex items-center gap-1.5">
                 <CalendarClock className="w-4 h-4 text-orange-700" />
-                4. Scadenze del veicolo
+                Scadenze iniziali
               </Label>
               <p className="mt-1 text-xs text-zinc-600">Inserisci le date effettive riportate sui documenti. I campi non ancora noti possono restare vuoti.</p>
             </div>
@@ -405,63 +328,6 @@ export function AddBikeModal({ open, onOpenChange, onBikeCreated }: AddBikeModal
               <Input name="deadline_warning_days" type="number" min="0" max="365" step="1" defaultValue="30" className="min-h-11 max-w-40 bg-white text-base" />
             </label>
           </section>
-
-          {/* SECTION 5: LIVERY COLOR PALETTE */}
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-700 flex items-center gap-1.5">
-                <Palette className="w-3.5 h-3.5 text-orange-700" />
-                5. Colore del veicolo
-              </Label>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-mono text-zinc-600">{primaryColor}</span>
-                <input
-                  type="color"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="w-6 h-6 rounded cursor-pointer border border-zinc-200 bg-transparent"
-                  title="Scegli colore personalizzato"
-                />
-              </div>
-            </div>
-
-            {/* Extracted or Preset swatches */}
-            <div className="flex flex-wrap gap-2 items-center">
-              {extractedPalette.length > 0 && (
-                <div className="flex items-center gap-1.5 pr-2 border-r border-zinc-200">
-                  {extractedPalette.map((hex) => (
-                    <button
-                      key={hex}
-                      type="button"
-                      onClick={() => setPrimaryColor(hex)}
-                      className={`w-7 h-7 rounded-lg border transition-transform active:scale-95 ${
-                        primaryColor === hex
-                          ? 'ring-2 ring-orange-500 scale-110 border-white'
-                          : 'border-zinc-200 hover:scale-105'
-                      }`}
-                      style={{ backgroundColor: hex }}
-                      title={`Colore estratto: ${hex}`}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {PRESET_COLORS.map((color) => (
-                <button
-                  key={color.hex}
-                  type="button"
-                  onClick={() => setPrimaryColor(color.hex)}
-                  className={`w-7 h-7 rounded-lg border transition-transform active:scale-95 ${
-                    primaryColor === color.hex
-                      ? 'ring-2 ring-orange-500 scale-110 border-white'
-                      : 'border-zinc-200 hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: color.hex }}
-                  title={color.name}
-                />
-              ))}
-            </div>
-          </div>
 
           {/* Footer Submit Buttons */}
           <div className="pt-3 border-t border-zinc-200 flex items-center justify-end gap-2.5">

@@ -1,12 +1,12 @@
 # AGENTS.md — GestionaleVeicoli (Motorbike Management System)
 
 ## 1. Descrizione Architettura e Stack Tecnologico
-Applicazione web mobile-first installabile come **Progressive Web App (PWA)**, progettata per la gestione interna del parco veicoli (moto, auto, furgoni e scooter), del registro tecnico degli interventi e delle scadenze di manutenzione. La pagina `/spese` registra importi in centesimi e presenta totali per veicolo, categoria e periodo. La colonna legacy `maintenance_logs.cost` resta per compatibilità; non alimenta il nuovo registro spese.
+Applicazione web mobile-first installabile come **Progressive Web App (PWA)**, progettata per la gestione interna del parco veicoli (auto, furgoni, moto e scooter), delle scadenze, dei documenti, delle spese ricorrenti e degli interventi straordinari.
 
 - **Framework**: Next.js 15+ (App Router, Server Components e Server Actions, TypeScript).
 - **Styling & UI**: Tailwind CSS v4, shadcn/ui (radix/base), Lucide React.
 - **Database & Storage**: Supabase (PostgreSQL relazionale per moto e interventi + Supabase Storage bucket `receipts` per ricevute e foto).
-- **PWA & Mobile**: Configurazione standalone con `manifest.json`, Web App meta tag iOS/Android e viewport anti-zoom per l'uso immediato da smartphone con guanti da garage.
+- **PWA & Mobile**: Configurazione standalone tramite `app/manifest.ts`, icona LP Garage e Web App meta tag iOS/Android.
 - **Validazione**: React Hook Form, Zod.
 - **Client Supabase**: `@supabase/ssr` e `@supabase/supabase-js`.
 
@@ -43,8 +43,7 @@ motorbike-management-sys/
 │   ├── demo-data.ts             # Collezioni vuote: nessun dato dimostrativo
 │   └── utils.ts                 # Utility di classe (cn) per Tailwind
 ├── public/
-│   ├── manifest.json            # Manifest statico PWA
-│   └── icons/                   # Icone PWA (icon.svg, 192x192, 512x512, apple-touch-icon)
+│   └── icons/                   # Icone LP Garage per PWA e collegamenti desktop
 ├── supabase/
 │   └── schema.sql               # Definizione DDL tabelle bikes, maintenance_logs, trigger km, bucket receipts e RLS
 ├── .env.example                 # Template chiavi ambiente

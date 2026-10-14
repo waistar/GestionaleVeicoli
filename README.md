@@ -1,6 +1,6 @@
 # GestionaleVeicoli — gestionale interno veicoli
 
-Applicazione Next.js per **moto, auto, furgoni e scooter**, centrata sullo scadenzario del parco veicoli. Assicurazioni, bollo, revisione, documenti e manutenzioni si configurano per data o chilometraggio. Lo storico tecnico e il registro spese restano funzioni di supporto.
+Applicazione Next.js per un parco completo di **auto, furgoni, moto e scooter**, centrata su scadenze, documenti e costi. Assicurazioni, bollo, revisione e manutenzioni programmate si configurano per data o chilometraggio; lo storico contiene solo interventi straordinari.
 
 ## Avvio locale
 

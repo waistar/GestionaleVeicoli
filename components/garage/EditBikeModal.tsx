@@ -14,16 +14,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { VEHICLE_TYPES, vehicleType, type VehicleType } from '@/lib/vehicle-catalog';
 import { Bike } from '@/lib/supabase/types';
-import { extractDominantColor } from '@/lib/image-colors';
 import { updateBike } from '@/app/actions/bikes';
-import { VehicleViewer } from './VehicleViewer';
 import {
   Upload,
   Camera,
   CarFront,
-  Sparkles,
   Loader2,
-  Palette,
   AlertCircle,
   CalendarClock,
 } from 'lucide-react';
@@ -35,17 +31,6 @@ interface EditBikeModalProps {
   onBikeUpdated?: (bike: Bike) => void;
 }
 
-const PRESET_COLORS = [
-  { name: 'Blu', hex: '#0284c7' },
-  { name: 'Rosso', hex: '#dc2626' },
-  { name: 'Verde', hex: '#16a34a' },
-  { name: 'Arancione', hex: '#ea580c' },
-  { name: 'Blu intenso', hex: '#2563eb' },
-  { name: 'Nero', hex: '#27272a' },
-  { name: 'Grigio', hex: '#94a3b8' },
-  { name: 'Giallo', hex: '#eab308' },
-];
-
 export function EditBikeModal({ bike, open, onOpenChange, onBikeUpdated }: EditBikeModalProps) {
   const [vehicleTypeValue, setVehicleType] = useState<VehicleType>(bike ? vehicleType(bike) : 'auto');
   const [plate, setPlate] = useState(bike?.plate || '');
@@ -53,19 +38,15 @@ export function EditBikeModal({ bike, open, onOpenChange, onBikeUpdated }: EditB
   const [model, setModel] = useState(bike?.model || '');
   const [year, setYear] = useState(bike?.year ? String(bike.year) : '');
   const [kmHours, setKmHours] = useState(String(bike?.current_km_hours || 0));
-  const [primaryColor, setPrimaryColor] = useState(bike?.primary_color || '#0284c7');
-  const [accentColor, setAccentColor] = useState(bike?.accent_color || '#18181b');
-
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(bike?.image_url || null);
-  const [isExtractingColor, setIsExtractingColor] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
-  const handleImageChange = async (file: File | null) => {
+  const handleImageChange = (file: File | null) => {
     if (!file) return;
 
     if (previewUrl && previewUrl.startsWith('blob:')) {
@@ -75,18 +56,6 @@ export function EditBikeModal({ bike, open, onOpenChange, onBikeUpdated }: EditB
     const objectUrl = URL.createObjectURL(file);
     setSelectedFile(file);
     setPreviewUrl(objectUrl);
-    setIsExtractingColor(true);
-
-    try {
-      const { primaryColor: detected, accentColor: detectedAccent } =
-        await extractDominantColor(file);
-      setPrimaryColor(detected);
-      setAccentColor(detectedAccent);
-    } catch (err) {
-      console.warn('Color extraction warning:', err);
-    } finally {
-      setIsExtractingColor(false);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,8 +82,8 @@ export function EditBikeModal({ bike, open, onOpenChange, onBikeUpdated }: EditB
       formData.append('model', model.trim());
       if (year.trim()) formData.append('year', year.trim());
       formData.append('current_km_hours', kmHours.trim() || '0');
-      formData.append('primary_color', primaryColor);
-      formData.append('accent_color', accentColor);
+      formData.append('primary_color', bike.primary_color || '#ea580c');
+      formData.append('accent_color', bike.accent_color || '#18181b');
 
       if (selectedFile) {
         formData.append('image', selectedFile);
@@ -176,23 +145,18 @@ export function EditBikeModal({ bike, open, onOpenChange, onBikeUpdated }: EditB
 
             {previewUrl ? (
               <div className="relative rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-50 p-2 flex items-center gap-4">
-                <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shrink-0 border border-zinc-200 bg-white">
+                <div className="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 border border-zinc-200 bg-white">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={previewUrl}
                     alt="Anteprima foto veicolo"
                     className="w-full h-full object-cover"
                   />
-                  {isExtractingColor && (
-                    <div className="absolute inset-0 bg-white/80 backdrop-blur-xs flex items-center justify-center">
-                      <Loader2 className="w-5 h-5 text-orange-700 animate-spin" />
-                    </div>
-                  )}
                 </div>
 
-                <div className="flex-1 space-y-2">
+                <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-800">Foto Attuale</span>
+                    <span className="text-xs font-bold text-zinc-800">Foto attuale</span>
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
@@ -202,17 +166,7 @@ export function EditBikeModal({ bike, open, onOpenChange, onBikeUpdated }: EditB
                     </button>
                   </div>
 
-                  <p className="text-[11px] text-zinc-600">
-                    Colore del veicolo:
-                  </p>
-
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-5 h-5 rounded-md border border-zinc-200 shadow-sm"
-                      style={{ backgroundColor: primaryColor }}
-                    />
-                    <span className="text-xs font-mono font-semibold text-zinc-800">{primaryColor}</span>
-                  </div>
+                  <p className="text-[11px] text-zinc-600 mt-1">Usata nella scheda del veicolo.</p>
                 </div>
               </div>
             ) : (
@@ -235,25 +189,6 @@ export function EditBikeModal({ bike, open, onOpenChange, onBikeUpdated }: EditB
                   handleImageChange(e.target.files[0]);
                 }
               }}
-            />
-          </div>
-
-          {/* Vehicle photo preview */}
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-700 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-orange-700" />
-              Foto del veicolo
-            </Label>
-            <VehicleViewer
-              bike={{
-                name: name || 'Veicolo',
-                vehicle_type: vehicleTypeValue,
-                plate,
-                primary_color: primaryColor,
-                accent_color: accentColor,
-                image_url: previewUrl,
-              }}
-              height={200}
             />
           </div>
 
@@ -316,37 +251,6 @@ export function EditBikeModal({ bike, open, onOpenChange, onBikeUpdated }: EditB
             </div>
             <Link href={`/promemoria?vehicle=${bike?.id || ''}`} onClick={() => onOpenChange(false)} className="min-h-11 inline-flex items-center justify-center rounded-xl bg-orange-600 px-4 text-sm font-semibold text-white">Apri scadenzario</Link>
           </section>
-
-          {/* Color */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-700 flex items-center gap-1.5">
-                <Palette className="w-3.5 h-3.5 text-orange-700" />
-                Colore del veicolo
-              </Label>
-              <input
-                type="color"
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                className="w-6 h-6 rounded cursor-pointer border border-zinc-200 bg-transparent"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-2 items-center">
-              {PRESET_COLORS.map((color) => (
-                <button
-                  key={color.hex}
-                  type="button"
-                  onClick={() => setPrimaryColor(color.hex)}
-                  className={`w-7 h-7 rounded-lg border transition-transform ${
-                    primaryColor === color.hex ? 'ring-2 ring-orange-500 scale-110 border-white' : 'border-zinc-200'
-                  }`}
-                  style={{ backgroundColor: color.hex }}
-                  title={color.name}
-                />
-              ))}
-            </div>
-          </div>
 
           {/* Footer Submit */}
           <div className="pt-3 border-t border-zinc-200 flex items-center justify-end gap-2.5">
