@@ -6,6 +6,7 @@ function brandFor(vehicle: Bike) {
   if (/\baudi\b/.test(value)) return 'audi';
   if (/\bfiat\b/.test(value) || /\bpanda\b/.test(value)) return 'fiat';
   if (/\bhonda\b/.test(value)) return 'honda';
+  if (/\bktm\b/.test(value)) return 'ktm';
   return null;
 }
 
@@ -36,6 +37,17 @@ export function VehicleBrandLogo({ vehicle }: { vehicle: Bike }) {
         <rect x="12" y="6" width="48" height="38" rx="9" fill="none" stroke="#cc0000" strokeWidth="3" />
         <path d="M21 13c1 9 2 17 4 24h7V27h8v10h7c2-7 3-15 4-24h-7l-2 10H30l-2-10Z" fill="#cc0000" />
         <text x="36" y="57" textAnchor="middle" fill="#cc0000" fontSize="11" fontWeight="800" fontFamily="Arial, sans-serif" letterSpacing="1.5">HONDA</text>
+      </svg>
+    </div>;
+  }
+
+  if (brand === 'ktm') {
+    return <div aria-label="KTM" role="img" className="w-14 h-14 rounded-xl border border-zinc-200 bg-white flex items-center justify-center shrink-0 shadow-sm">
+      <svg viewBox="0 0 92 52" className="w-12 h-auto" aria-hidden="true">
+        <g transform="skewX(-10)">
+          <text x="44" y="35" textAnchor="middle" fill="#ff6600" fontSize="30" fontWeight="900" fontFamily="Arial Black, Arial, sans-serif" letterSpacing="-2.5">KTM</text>
+          <path d="M11 39h66l-4 4H7Z" fill="#ff6600" />
+        </g>
       </svg>
     </div>;
   }
