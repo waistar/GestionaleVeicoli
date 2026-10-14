@@ -38,6 +38,7 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
   const isGarage = pathname === '/garage';
   const isExpenses = pathname === '/spese';
   const isDocuments = pathname === '/documenti';
+  const isFleetOverview = pathname === '/';
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -82,12 +83,9 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 text-left transition-colors cursor-pointer group"
             title="Cambia veicolo"
           >
-            <div
-              className="w-2 h-2 rounded-full ring-1 ring-zinc-200 shrink-0"
-              style={{ backgroundColor: bike.primary_color || '#f97316' }}
-            />
+            <div className={`w-2 h-2 rounded-full ring-1 ring-zinc-200 shrink-0 ${isFleetOverview ? 'bg-orange-500' : ''}`} style={isFleetOverview ? undefined : { backgroundColor: bike.primary_color || '#f97316' }} />
             <p className="text-xs text-zinc-700 font-semibold truncate max-w-[110px] sm:max-w-[160px]">
-              {bike.name}
+              {isFleetOverview ? 'Tutti i veicoli' : bike.name}
             </p>
             <ChevronDown className={`w-3.5 h-3.5 text-zinc-600 group-hover:text-orange-700 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -113,15 +111,16 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
                 <Link
                   href="/"
                   onClick={() => setDropdownOpen(false)}
-                  className="w-full flex items-center gap-2 p-2 rounded-xl text-left text-xs font-semibold text-zinc-800 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                  aria-current={isFleetOverview ? 'page' : undefined}
+                  className={`w-full flex items-center justify-between gap-2 p-2 rounded-xl text-left text-xs font-semibold transition-colors ${isFleetOverview ? 'bg-orange-500/15 text-orange-700 border border-orange-500/20' : 'text-zinc-800 hover:bg-orange-50 hover:text-orange-700'}`}
                 >
-                  <span className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center shrink-0"><LayoutDashboard className="w-4 h-4" /></span>
-                  <span><span className="block font-bold">Tutti i veicoli</span><span className="block text-[10px] font-normal text-zinc-500">Panoramica generale</span></span>
+                  <span className="flex items-center gap-2"><span className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center shrink-0"><LayoutDashboard className="w-4 h-4" /></span><span><span className="block font-bold">Tutti i veicoli</span><span className="block text-[10px] font-normal text-zinc-500">Panoramica generale</span></span></span>
+                  {isFleetOverview && <Check className="w-4 h-4 text-orange-700 shrink-0" />}
                 </Link>
                 <div className="h-px bg-zinc-100 my-1" />
                 {allBikes && allBikes.length > 0 ? (
                   allBikes.map((b) => {
-                    const isCurrent = b.id === bike.id;
+                    const isCurrent = !isFleetOverview && b.id === bike.id;
                     return (
                       <Link
                         key={b.id}
