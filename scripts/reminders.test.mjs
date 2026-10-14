@@ -53,7 +53,7 @@ test('più scadenze della stessa categoria rimangono indipendenti',()=>{
  assert.equal(reminders.length,2);assert.equal(reminders[0].status,'expired');
 });
 test('catalogo per tipo e compatibilità con i vecchi scooter',()=>{
- const expected = ['Bollo','Assicurazione RCA','Revisione','Abbonamento parcheggio / sosta blu','Tagliando','Cambio gomme'];
+ const expected = ['Bollo','Assicurazione RCA','Revisione','Abbonamento parcheggio / sosta blu','Tagliando','Cambio olio','Cambio gomme'];
  for(const type of ['moto','auto','furgone','scooter']) assert.deepEqual(catalogFor(type).map(c=>c.label), expected);
  assert.equal(vehicleType({category:'scooter'}),'scooter');
 });

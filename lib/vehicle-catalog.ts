@@ -12,7 +12,7 @@ export const vehicleTypeLabel = (vehicle: { vehicle_type?: string; category?: st
 
 const items = {
   'Documenti e adempimenti': ['Bollo', 'Assicurazione RCA', 'Revisione', 'Abbonamento parcheggio / sosta blu'],
-  'Manutenzione programmata': ['Tagliando', 'Cambio gomme'],
+  'Manutenzione programmata': ['Tagliando', 'Cambio olio', 'Cambio gomme'],
 } as const;
 export const SERVICE_CATALOG = Object.entries(items).flatMap(([group, labels]) => labels.map(label => ({ label, group })));
 export const serviceGroup = (category: string) => SERVICE_CATALOG.find(c => c.label === category)?.group || 'Personalizzata';
