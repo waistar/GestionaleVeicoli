@@ -1,4 +1,4 @@
-﻿# AGENTS.md — MotoTracker (Motorbike Management System)
+# AGENTS.md — MotoTracker (Motorbike Management System)
 
 ## 1. Descrizione Architettura e Stack Tecnologico
 Applicazione web mobile-first installabile come **Progressive Web App (PWA)**, progettata per la gestione completa e il tracciamento della manutenzione di una o più moto da officina/garage.
@@ -16,7 +16,7 @@ Applicazione web mobile-first installabile come **Progressive Web App (PWA)**, p
 ```
 motorbike-management-sys/
 ├── app/
-│   ├── layout.tsx               # Root layout con meta tag PWA, viewport anti-zoom e font Geist
+│   ├── layout.tsx               # Root layout con meta tag PWA, viewport anti-zoom e font Inter / JetBrains Mono
 │   ├── page.tsx                 # Dashboard principale (Km, Spesa totale, Alert scadenze, Ultimi interventi)
 │   ├── manifest.ts              # Web App Manifest dinamico per installazione PWA
 │   ├── actions/
