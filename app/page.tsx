@@ -8,8 +8,9 @@ import { EmptyGarage } from '@/components/garage/EmptyGarage';
 import { VehicleBrandLogo } from '@/components/garage/VehicleBrandLogo';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { CalendarClock, ChevronRight, Plus, Warehouse } from 'lucide-react';
+import { CalendarClock, ChevronRight, Plus, Wallet, Warehouse } from 'lucide-react';
 import { formatCurrency } from '@/lib/expenses';
+import { summarizeAnnualVehicleCosts } from '@/lib/annual-costs';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +40,12 @@ export default async function FleetDashboardPage() {
   const expiredCount = reminders.filter(reminder => reminder.status === 'expired').length;
   const warningCount = reminders.filter(reminder => reminder.status === 'warning').length;
   const alertsCount = expiredCount + warningCount;
+  const currentYear = new Date().getFullYear();
+  let annualTotalCents: number | null = null;
+  if (!error) {
+    try { annualTotalCents = summarizeAnnualVehicleCosts(currentYear, scheduled, logs).totalCents; }
+    catch { annualTotalCents = null; }
+  }
   const activeVehicle = fleet.bikes.find(vehicle => vehicle.id === fleet.activeBikeId) || fleet.bikes[0];
   const typePriority = { auto: 0, furgone: 1, moto: 2, scooter: 3 } as const;
   const dashboardVehicles = fleet.bikes
@@ -56,12 +63,17 @@ export default async function FleetDashboardPage() {
 
       {error && <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Alcuni dati non sono disponibili. Verifica il collegamento al database e riprova.</p>}
 
-      <section aria-label="Riepilogo parco veicoli" className="grid grid-cols-3 gap-2.5 sm:gap-4">
+      <section aria-label="Riepilogo parco veicoli" className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {[
           ['Veicoli', fleet.bikes.length, 'Mezzi registrati', 'text-zinc-900'],
           ['Scadute', expiredCount, 'Da gestire subito', expiredCount ? 'text-rose-700' : 'text-zinc-900'],
           ['In scadenza', warningCount, 'Entro il preavviso', warningCount ? 'text-amber-700' : 'text-zinc-900'],
         ].map(([label, value, note, color]) => <article key={String(label)} className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-3 sm:p-5 shadow-sm"><p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-600 truncate">{label}</p><p className={`mt-2 text-2xl sm:text-3xl font-bold font-mono ${color}`}>{value}</p><p className="mt-1 text-[10px] sm:text-xs text-zinc-500">{note}</p></article>)}
+        <Link href="/spese" className="min-w-0 rounded-2xl border border-orange-200 bg-orange-50 p-3 sm:p-5 shadow-sm hover:border-orange-300 transition-colors">
+          <div className="flex items-center justify-between gap-2"><p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-orange-800 truncate">Spese {currentYear}</p><Wallet className="w-4 h-4 text-orange-700 shrink-0" /></div>
+          <p className="mt-2 text-xl sm:text-3xl font-bold font-mono text-zinc-900 break-words">{annualTotalCents == null ? '—' : formatCurrency(annualTotalCents)}</p>
+          <p className="mt-1 text-[10px] sm:text-xs text-zinc-600">Ricorrenti + straordinarie</p>
+        </Link>
       </section>
 
       <section className="space-y-4">

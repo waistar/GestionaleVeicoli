@@ -1,14 +1,12 @@
-import type { MaintenanceLog, VehicleExpense, VehicleReminder } from './supabase/types';
+import type { MaintenanceLog, VehicleReminder } from './supabase/types';
 
 export interface AnnualVehicleCosts {
   year: number;
   recurringCents: number;
-  interventionCents: number;
-  otherExpenseCents: number;
+  extraordinaryCents: number;
   totalCents: number;
   recurringCount: number;
-  interventionCount: number;
-  otherExpenseCount: number;
+  extraordinaryCount: number;
 }
 
 function isInYear(date: string | null | undefined, year: number) {
@@ -29,14 +27,11 @@ export function summarizeAnnualVehicleCosts(
   year: number,
   reminders: VehicleReminder[],
   logs: MaintenanceLog[],
-  expenses: VehicleExpense[],
 ): AnnualVehicleCosts {
   let recurringCents = 0;
-  let interventionCents = 0;
-  let otherExpenseCents = 0;
+  let extraordinaryCents = 0;
   let recurringCount = 0;
-  let interventionCount = 0;
-  let otherExpenseCount = 0;
+  let extraordinaryCount = 0;
 
   for (const reminder of reminders) {
     if (!isInYear(reminder.due_date, year) || reminder.amount_cents == null) continue;
@@ -50,19 +45,11 @@ export function summarizeAnnualVehicleCosts(
     if (!isInYear(log.date, year)) continue;
     const cents = maintenanceCostCents(log.cost);
     if (!cents) continue;
-    interventionCents += cents;
-    interventionCount++;
+    extraordinaryCents += cents;
+    extraordinaryCount++;
   }
 
-  for (const expense of expenses) {
-    if (!isInYear(expense.date, year)) continue;
-    const cents = Number(expense.amount_cents);
-    if (!Number.isSafeInteger(cents) || cents <= 0) throw new Error('Importo spesa non valido.');
-    otherExpenseCents += cents;
-    otherExpenseCount++;
-  }
-
-  const totalCents = recurringCents + interventionCents + otherExpenseCents;
+  const totalCents = recurringCents + extraordinaryCents;
   if (!Number.isSafeInteger(totalCents)) throw new Error('Il totale annuale supera il limite supportato.');
-  return { year, recurringCents, interventionCents, otherExpenseCents, totalCents, recurringCount, interventionCount, otherExpenseCount };
+  return { year, recurringCents, extraordinaryCents, totalCents, recurringCount, extraordinaryCount };
 }

@@ -11,7 +11,7 @@ import { ChevronLeft, Wrench } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
-export default async function NuovoInterventoPage({ searchParams }: { searchParams: Promise<{ vehicle?: string; category?: string }> }) {
+export default async function NuovoInterventoPage({ searchParams }: { searchParams: Promise<{ vehicle?: string; category?: string; extraordinary?: string }> }) {
   const params = await searchParams;
   const { bikes } = await getAllBikes();
   const { bike, logs, scheduled, isFallback } = await getMainData(params.vehicle);
@@ -39,12 +39,12 @@ export default async function NuovoInterventoPage({ searchParams }: { searchPara
               Nuovo Intervento
             </h1>
             <p className="text-xs sm:text-sm text-zinc-600 mt-0.5">
-              Registra lavori di meccanica, manutenzioni e relativi costi per {bike.name}
+              Registra lavori di meccanica e, quando straordinari, il relativo costo per {bike.name}
             </p>
           </div>
         </div>
 
-        <MaintenanceForm key={bike.id} bike={bike} initialCategory={params.category?.slice(0,100)} />
+        <MaintenanceForm key={bike.id} bike={bike} initialCategory={params.category?.slice(0,100)} initialExtraordinary={params.extraordinary === '1'} />
       </main>
 
       <BottomNav alertsCount={stats.alertsTotal} />

@@ -10,7 +10,7 @@ const loadedModule = { exports: {} };
 new Function('require', 'module', 'exports', code)(() => ({}), loadedModule, loadedModule.exports);
 const { maintenanceCostCents, summarizeAnnualVehicleCosts } = loadedModule.exports;
 
-test('somma spese ricorrenti, interventi e altre spese dello stesso anno', () => {
+test('somma spese ricorrenti e interventi straordinari dello stesso anno', () => {
   const reminders = [
     { due_date: '2026-05-01', amount_cents: 35000 },
     { due_date: '2027-05-01', amount_cents: 99900 },
@@ -21,20 +21,14 @@ test('somma spese ricorrenti, interventi e altre spese dello stesso anno', () =>
     { date: '2026-03-01', cost: 0 },
     { date: '2025-03-01', cost: 800 },
   ];
-  const expenses = [
-    { date: '2026-04-01', amount_cents: 5000 },
-    { date: '2025-04-01', amount_cents: 8000 },
-  ];
-  const result = summarizeAnnualVehicleCosts(2026, reminders, logs, expenses);
+  const result = summarizeAnnualVehicleCosts(2026, reminders, logs);
   assert.deepEqual(result, {
     year: 2026,
     recurringCents: 35000,
-    interventionCents: 12550,
-    otherExpenseCents: 5000,
-    totalCents: 52550,
+    extraordinaryCents: 12550,
+    totalCents: 47550,
     recurringCount: 1,
-    interventionCount: 1,
-    otherExpenseCount: 1,
+    extraordinaryCount: 1,
   });
 });
 

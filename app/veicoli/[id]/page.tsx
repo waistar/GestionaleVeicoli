@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getAllBikes } from '@/app/actions/bikes';
 import { createClient } from '@/lib/supabase/server';
-import type { MaintenanceLog, VehicleExpense, VehicleReminder } from '@/lib/supabase/types';
+import type { MaintenanceLog, VehicleReminder } from '@/lib/supabase/types';
 import { calculateStats } from '@/lib/reminders';
 import { summarizeAnnualVehicleCosts, type AnnualVehicleCosts } from '@/lib/annual-costs';
 import { Header } from '@/components/layout/Header';
@@ -26,33 +26,27 @@ export default async function VehicleDashboardPage({ params }: { params: Promise
 
   let logs: MaintenanceLog[] = [];
   let scheduled: VehicleReminder[] = [];
-  let vehicleExpenses: VehicleExpense[] = [];
   let error = fleet.error;
-  let expenseError = '';
   try {
     const db = await createClient();
-    const [history, plans, expenses] = await Promise.all([
+    const [history, plans] = await Promise.all([
       db.from('maintenance_logs').select('*').eq('bike_id', id).order('date', { ascending: false }),
       db.from('vehicle_reminders').select('*').eq('bike_id', id),
-      db.from('vehicle_expenses').select('*').eq('vehicle_ref', id).order('date', { ascending: false }),
     ]);
     logs = (history.data || []) as MaintenanceLog[];
     scheduled = (plans.data || []) as VehicleReminder[];
-    vehicleExpenses = (expenses.data || []) as VehicleExpense[];
     error = error || history.error?.message || plans.error?.message;
-    expenseError = expenses.error?.message || '';
   } catch (loadError) {
     error = loadError instanceof Error ? loadError.message : 'Impossibile caricare i dati del veicolo.';
-    expenseError = error;
   }
 
   const isFallback = fleet.isFallback;
   const stats = calculateStats(bike, logs, scheduled);
   const currentYear = new Date().getFullYear();
-  let annualCosts: AnnualVehicleCosts = { year: currentYear, recurringCents: 0, interventionCents: 0, otherExpenseCents: 0, totalCents: 0, recurringCount: 0, interventionCount: 0, otherExpenseCount: 0 };
-  let expensesUnavailable = Boolean(error || expenseError);
+  let annualCosts: AnnualVehicleCosts = { year: currentYear, recurringCents: 0, extraordinaryCents: 0, totalCents: 0, recurringCount: 0, extraordinaryCount: 0 };
+  let expensesUnavailable = Boolean(error);
   if (!expensesUnavailable) {
-    try { annualCosts = summarizeAnnualVehicleCosts(currentYear, scheduled, logs, vehicleExpenses); }
+    try { annualCosts = summarizeAnnualVehicleCosts(currentYear, scheduled, logs); }
     catch { expensesUnavailable = true; }
   }
 

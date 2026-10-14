@@ -27,9 +27,10 @@ import {
 interface MaintenanceFormProps {
   bike: Bike;
   initialCategory?: string;
+  initialExtraordinary?: boolean;
 }
 
-export function MaintenanceForm({ bike, initialCategory = 'Tagliando' }: MaintenanceFormProps) {
+export function MaintenanceForm({ bike, initialCategory = 'Tagliando', initialExtraordinary = false }: MaintenanceFormProps) {
   const router = useRouter();
 
   const todayStr = new Date().toISOString().split('T')[0];
@@ -38,6 +39,7 @@ export function MaintenanceForm({ bike, initialCategory = 'Tagliando' }: Mainten
   const [category, setCategory] = useState<MaintenanceCategory>(initialCategory);
   const [description, setDescription] = useState('');
   const [nextDueKm, setNextDueKm] = useState('');
+  const [isExtraordinary, setIsExtraordinary] = useState(initialExtraordinary);
   const [cost, setCost] = useState('');
 
   // Image upload state
@@ -94,7 +96,8 @@ export function MaintenanceForm({ bike, initialCategory = 'Tagliando' }: Mainten
       formData.append('km_hours', kmHours);
       formData.append('category', category);
       formData.append('description', description.trim());
-      formData.append('cost', cost.trim());
+      formData.append('extraordinary', isExtraordinary ? 'true' : 'false');
+      formData.append('cost', isExtraordinary ? cost.trim() : '');
 
       if (nextDueKm && nextDueKm.trim() !== '') {
         formData.append('next_due_km_hours', nextDueKm.trim());
@@ -145,7 +148,7 @@ export function MaintenanceForm({ bike, initialCategory = 'Tagliando' }: Mainten
 
           {/* 2. Dati Base: Data e Chilometraggio */}
           <Card className="bg-zinc-50/90 border-zinc-200 p-4 sm:p-5 rounded-2xl space-y-3.5">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Data */}
               <div>
                 <label className="text-xs font-semibold text-zinc-700 mb-1.5 flex items-center gap-1">
@@ -179,21 +182,37 @@ export function MaintenanceForm({ bike, initialCategory = 'Tagliando' }: Mainten
                 />
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-zinc-700 mb-1.5 flex items-center gap-1">
-                  <Euro className="w-3.5 h-3.5 text-orange-700" />
-                  Costo (€)
-                </label>
-                <Input
-                  value={cost}
-                  onChange={(e) => setCost(e.target.value)}
-                  placeholder="es. 125,50"
-                  inputMode="decimal"
-                  maxLength={10}
-                  className="bg-white border-zinc-200 text-zinc-900 font-mono text-sm h-11"
-                />
-              </div>
             </div>
+          </Card>
+
+          <Card className="bg-zinc-50/90 border-zinc-200 p-4 sm:p-5 rounded-2xl space-y-3">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isExtraordinary}
+                onChange={event => { setIsExtraordinary(event.target.checked); if (!event.target.checked) setCost(''); }}
+                className="mt-1 h-5 w-5 accent-orange-600"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-zinc-900">Intervento straordinario con spesa</span>
+                <span className="block text-xs text-zinc-600 mt-1">Attivalo solo per riparazioni o lavori fuori dalle normali scadenze. La spesa comparirà automaticamente nei totali.</span>
+              </span>
+            </label>
+            {isExtraordinary && <div>
+              <label className="text-xs font-semibold text-zinc-700 mb-1.5 flex items-center gap-1">
+                <Euro className="w-3.5 h-3.5 text-orange-700" />
+                Costo straordinario (€) *
+              </label>
+              <Input
+                value={cost}
+                onChange={(e) => setCost(e.target.value)}
+                placeholder="es. 125,50"
+                inputMode="decimal"
+                maxLength={10}
+                required
+                className="bg-white border-zinc-200 text-zinc-900 font-mono text-sm h-11"
+              />
+            </div>}
           </Card>
 
           {/* 3. Descrizione & Ricambi */}
@@ -319,10 +338,10 @@ export function MaintenanceForm({ bike, initialCategory = 'Tagliando' }: Mainten
                 <span className="text-zinc-600">Data / Km</span>
                 <span className="font-mono text-zinc-800">{date} • {kmHours || '0'} km</span>
               </div>
-              <div className="flex items-center justify-between py-1 border-b border-zinc-200/80">
-                <span className="text-zinc-600">Costo</span>
-                <span className="font-mono text-zinc-800">{cost.trim() ? `${cost} €` : 'Non indicato'}</span>
-              </div>
+              {isExtraordinary && <div className="flex items-center justify-between py-1 border-b border-zinc-200/80">
+                <span className="text-zinc-600">Spesa straordinaria</span>
+                <span className="font-mono text-zinc-800">{cost.trim() ? `${cost} €` : 'Da indicare'}</span>
+              </div>}
               <div className="flex items-center justify-between py-1">
                 <span className="text-zinc-600">Prossima scadenza</span>
                 <span className="font-mono text-amber-700">

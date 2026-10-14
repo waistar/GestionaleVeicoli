@@ -105,7 +105,7 @@ export function StatCards({ bike, alertsCount, annualCosts, expensesUnavailable 
                 {expensesUnavailable ? '—' : formatCurrency(annualCosts.totalCents)}
               </span>
               <span className="text-[10px] sm:text-xs text-zinc-600 block mt-0.5 sm:mt-1">
-                {expensesUnavailable ? 'Dati non disponibili' : `${annualCosts.year} · ${annualCosts.recurringCount} ricorrenti · ${annualCosts.interventionCount} interventi · ${annualCosts.otherExpenseCount} altre`}
+                {expensesUnavailable ? 'Dati non disponibili' : `${annualCosts.year} · ${annualCosts.recurringCount} ricorrenti · ${annualCosts.extraordinaryCount} straordinarie`}
               </span>
             </div>
           </Card>

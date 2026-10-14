@@ -90,11 +90,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 Non creare veicoli, interventi o scadenze di esempio durante le letture o la configurazione SQL. `getActiveBike` restituisce `null` se l’archivio è vuoto e le pagine mostrano `EmptyGarage`. È consentita l’eliminazione dell’ultimo veicolo.
 
 ## Registro spese
-- `vehicle_expenses` è la fonte dei totali della pagina `/spese`; sommare centesimi interi, non importi decimali.
-- `maintenance_logs.cost` registra il costo del singolo intervento in euro. La scheda veicolo calcola il totale dell’anno sommando scadenze con importo, interventi e `vehicle_expenses`, mostrando le tre componenti; non duplicare automaticamente un intervento nel registro spese.
-- La migrazione `supabase/migrations/20261014_vehicle_expenses.sql` è allineata alla sezione 9 di `schema.sql`. Non aggiungere dati dimostrativi.
-- `bike_id` diventa nullo alla rimozione del veicolo; `vehicle_ref` e `vehicle_label` conservano il raggruppamento e lo storico. Non cancellare le spese a cascata.
-- `lib/expenses.ts` contiene validazione, filtri e aggregazione. `npm test` comprende i casi economici.
+- La pagina `/spese` deriva automaticamente tutte le voci dalle scadenze con `amount_cents` e dagli interventi straordinari con `maintenance_logs.cost`; non offre inserimenti manuali separati.
+- `maintenance_logs.cost` è valorizzato soltanto quando l’operatore seleziona “Intervento straordinario con spesa”. I totali annuali, sia del singolo veicolo sia dell’intera flotta, sommano ricorrenti e straordinarie senza duplicazioni.
+- `lib/annual-costs.ts` calcola i totali annuali in centesimi e `lib/automatic-expenses.ts` costruisce il registro consultabile. Non aggiungere dati dimostrativi.
 
 ## Registrazione veicoli
 I moduli di aggiunta e modifica sono comuni al parco veicoli e non espongono sottocategorie moto. Il tipo predefinito per un nuovo veicolo è Auto. La colonna legacy `category` resta compatibile con i dati esistenti e non viene riscritta durante la modifica dell’anagrafica.

@@ -39,6 +39,7 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
     const description = (formData.get('description') as string) || '';
     const nextDueRaw = formData.get('next_due_km_hours') as string;
     const nextDue = nextDueRaw && nextDueRaw.trim() !== '' ? parseFloat(nextDueRaw) : null;
+    const extraordinary = formData.get('extraordinary') === 'true';
     const costRaw = String(formData.get('cost') || '').trim();
     const parsedCost = costRaw ? amountSchema.safeParse(costRaw) : null;
 
@@ -56,6 +57,9 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
     }
     if (parsedCost && !parsedCost.success) {
       return { success: false, error: parsedCost.error.issues[0].message };
+    }
+    if (extraordinary && !parsedCost?.success) {
+      return { success: false, error: 'Inserisci il costo dell’intervento straordinario.' };
     }
 
     let imageUrl: string | null = null;
@@ -100,7 +104,7 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
         km_hours: kmHours,
         category,
         description,
-        cost: parsedCost?.success ? parsedCost.data / 100 : 0,
+        cost: extraordinary && parsedCost?.success ? parsedCost.data / 100 : 0,
         image_url: imageUrl,
         next_due_km_hours: nextDue,
       })
