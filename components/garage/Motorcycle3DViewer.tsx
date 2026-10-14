@@ -240,8 +240,9 @@ export function Motorcycle3DViewer({
           return '/models/maxi_scooter.glb';
         case 'cruiser':
           return '/models/caferacer.glb';
-        case 'sport':
         case 'adventure':
+          return '/models/adventure_bike.glb';
+        case 'sport':
         default:
           return '/models/sport_motorcycle.glb';
       }
@@ -451,7 +452,57 @@ export function Motorcycle3DViewer({
               }
             }
 
-            // --- 5. SPORT / SUPERSPORT & ADVENTURE (sport_motorcycle.glb) ---
+            // --- 5. ADVENTURE / DUAL-SPORT & RALLY (adventure_bike.glb) ---
+            else if (category === 'adventure') {
+              if (matName.includes('benzobak_white_dark') || meshName.includes('benzobak_white_dark')) {
+                const pMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                pMat.color = new THREE.Color(primaryColor);
+                pMat.metalness = 0.38;
+                pMat.roughness = 0.18;
+                pMat.envMapIntensity = 1.45;
+                mesh.material = pMat;
+                mesh.name = 'Serbatoio Adventure Rally (Livrea Principale)';
+              } else if (matName.includes('benzobak_white1') || meshName.includes('benzobak_white1')) {
+                const wMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                wMat.color = new THREE.Color(0xf1f5f9);
+                wMat.metalness = 0.25;
+                wMat.roughness = 0.25;
+                wMat.envMapIntensity = 1.30;
+                mesh.material = wMat;
+                mesh.name = 'Grafiche & Inserti Bicolore Serbatoio';
+              } else if (matName.includes('sidenie') || matName.includes('kozha')) {
+                const aMat = (mesh.material as THREE.MeshStandardMaterial).clone();
+                const effectiveAccent = accentColor && accentColor !== '#18181b' ? accentColor : '#3a2618';
+                aMat.color = new THREE.Color(effectiveAccent);
+                aMat.metalness = 0.05;
+                aMat.roughness = 0.65;
+                aMat.envMapIntensity = 1.15;
+                mesh.material = aMat;
+                mesh.name = 'Sella Touring Adventure in Pelle';
+              } else if (matName.includes('protector') || matName.includes('rezina')) {
+                mesh.name = 'Pneumatici Tassellati Adventure On/Off-Road';
+              } else if (matName.includes('fara') || matName.includes('fonarreshotka')) {
+                mesh.name = 'Faro Anteriore con Griglia Parasassi Rally';
+              } else if (matName.includes('black_rama') || matName.includes('krepeg')) {
+                mesh.name = 'Telaio Tubolare a Traliccio Rinforzato';
+              } else if (matName.includes('glyshitel')) {
+                mesh.name = 'Terminale di Scarico Rialzato Dakar Rally';
+              } else if (matName.includes('radiator')) {
+                mesh.name = 'Radiatore Maggiorato Adventure';
+              } else if (matName.includes('ryl_vilka') || matName.includes('vilka')) {
+                mesh.name = 'Manubrio Largo & Forcelle Telescopiche a Lunga Escursione';
+              } else if (matName.includes('speedometr') || matName.includes('tahometr')) {
+                mesh.name = 'Cockpit & Strumentazione Digitale da Viaggio';
+              } else if (matName.includes('tormoz') || matName.includes('disk')) {
+                mesh.name = 'Dischi Freno Forati per Fango e Asfalto';
+              } else if (matName.includes('dvigatel')) {
+                mesh.name = 'Motore Bicilindrico Adventure Raffreddato a Liquido';
+              } else if (matName.includes('stopsignal') || matName.includes('prozrach')) {
+                mesh.name = 'Indicatori LED & Fanale Posteriore Sigillato';
+              }
+            }
+
+            // --- 6. SPORT / SUPERSPORT (sport_motorcycle.glb) ---
             else {
               if (matName.includes('carpaint.001')) {
                 const pMat = (mesh.material as THREE.MeshStandardMaterial).clone();
@@ -460,10 +511,7 @@ export function Motorcycle3DViewer({
                 pMat.roughness = 0.15;
                 pMat.envMapIntensity = 1.45;
                 mesh.material = pMat;
-                mesh.name =
-                  category === 'adventure'
-                    ? 'Serbatoio & Carenatura Adventure'
-                    : 'Carrozzeria & Serbatoio (Livrea Principale)';
+                mesh.name = 'Carrozzeria & Serbatoio (Livrea Principale)';
               } else if (matName.includes('carpaint_second')) {
                 const sMat = (mesh.material as THREE.MeshStandardMaterial).clone();
                 const effectiveAccent = accentColor && accentColor !== '#18181b' ? accentColor : '#25262c';

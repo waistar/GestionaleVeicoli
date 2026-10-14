@@ -16,8 +16,8 @@ export function applyCategoryKit(
   primaryColor: string,
   accentColor: string
 ): THREE.Group {
-  // Strip any track racing and BMW specific decals if base is sport_motorcycle
-  if (category === 'sport' || category === 'adventure') {
+  // Strip track racing decals only if model is sport_motorcycle
+  if (category === 'sport') {
     const bmwAndTrackDecals = [
       'bmw_logo',
       'bmw_logo_chrome',
@@ -93,112 +93,79 @@ export function applyCategoryKit(
   // 1. ADVENTURE / MAXI-ENDURO (BMW GS, Ténéré, Africa Twin)
   // ==========================================
   if (category === 'adventure') {
-    // Elevate model slightly for adventure ride height
-    model.position.y += 0.08;
-
-    // A. Adventure Front Beak (Beak Mudguard)
-    const beakShape = new THREE.Shape();
-    beakShape.moveTo(0, 0);
-    beakShape.lineTo(0.48, -0.06);
-    beakShape.lineTo(0.54, -0.09);
-    beakShape.lineTo(0.38, -0.16);
-    beakShape.lineTo(0, -0.12);
-    beakShape.closePath();
-
-    const extrudeSettings = { depth: 0.26, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.02, bevelThickness: 0.02 };
-    const beakGeo = new THREE.ExtrudeGeometry(beakShape, extrudeSettings);
-    beakGeo.center();
-
-    const beak = new THREE.Mesh(beakGeo, bodyMat);
-    beak.position.set(1.02, 0.14 + 0.08, 0);
-    beak.rotation.set(0, 0, -0.18);
-    beak.castShadow = true;
-    beak.name = 'Becco Paraspruzzi Anteriore Adventure';
-    kitGroup.add(beak);
-
-    // B. Tall Rally Touring Windscreen
-    const windScreen = model.getObjectByName('glass');
-    if (windScreen) windScreen.visible = false;
-    const rallyScreenGeo = new THREE.PlaneGeometry(0.26, 0.44, 4, 4);
+    // A. Tall Rally Touring Windscreen (Directly above the stone-guard headlight)
+    const rallyScreenGeo = new THREE.PlaneGeometry(0.24, 0.38, 4, 4);
     const rallyScreen = new THREE.Mesh(rallyScreenGeo, glassMat);
-    rallyScreen.position.set(0.84, 0.62 + 0.08, 0);
-    rallyScreen.rotation.set(0, Math.PI / 2, 0.28);
+    rallyScreen.position.set(0.72, 0.62, 0);
+    rallyScreen.rotation.set(0, Math.PI / 2, 0.22);
     rallyScreen.name = 'Cupolino Touring Rally Alto';
     kitGroup.add(rallyScreen);
 
-    // C. Heavy-Duty Tubular Engine Crash Bars (Left & Right)
-    const cageGeoL = new THREE.TorusGeometry(0.24, 0.016, 12, 24, Math.PI * 1.3);
+    // B. Heavy-Duty Tubular Engine Crash Bars (Left & Right flanking the twin engine)
+    const cageGeoL = new THREE.TorusGeometry(0.22, 0.016, 12, 24, Math.PI * 1.3);
     const leftCrashBar = new THREE.Mesh(cageGeoL, aluMat);
-    leftCrashBar.position.set(0.28, -0.04 + 0.08, -0.28);
-    leftCrashBar.rotation.set(0.4, 0.2, 0);
+    leftCrashBar.position.set(0.12, -0.05, -0.30);
+    leftCrashBar.rotation.set(0.35, 0.15, 0);
     leftCrashBar.castShadow = true;
     leftCrashBar.name = 'Barre Paramotore Tubolari Sinistre';
     kitGroup.add(leftCrashBar);
 
     const rightCrashBar = new THREE.Mesh(cageGeoL, aluMat);
-    rightCrashBar.position.set(0.28, -0.04 + 0.08, 0.28);
-    rightCrashBar.rotation.set(-0.4, -0.2, 0);
+    rightCrashBar.position.set(0.12, -0.05, 0.30);
+    rightCrashBar.rotation.set(-0.35, -0.15, 0);
     rightCrashBar.castShadow = true;
     rightCrashBar.name = 'Barre Paramotore Tubolari Destre';
     kitGroup.add(rightCrashBar);
 
-    // Aluminum Engine Skid Plate (Bash guard)
-    const skidGeo = new THREE.BoxGeometry(0.52, 0.04, 0.28);
-    const skidPlate = new THREE.Mesh(skidGeo, aluMat);
-    skidPlate.position.set(0.18, -0.42 + 0.08, 0);
-    skidPlate.rotation.z = -0.20;
-    skidPlate.name = 'Piastra Paracoppa Alluminio';
-    kitGroup.add(skidPlate);
-
-    // D. Dual Expedition Aluminum Panniers (Side Luggage Hard Cases)
-    const caseGeo = new THREE.BoxGeometry(0.46, 0.36, 0.24);
+    // C. Dual Expedition Aluminum Panniers (Side Luggage Hard Cases)
+    const caseGeo = new THREE.BoxGeometry(0.44, 0.34, 0.22);
 
     const leftCase = new THREE.Mesh(caseGeo, aluMat);
-    leftCase.position.set(-0.76, 0.06 + 0.08, -0.44);
+    leftCase.position.set(-0.72, 0.14, -0.42);
     leftCase.castShadow = true;
     leftCase.name = 'Valigia Laterale Alluminio Expedition (SX)';
     kitGroup.add(leftCase);
 
     const rightCase = new THREE.Mesh(caseGeo, aluMat);
-    rightCase.position.set(-0.76, 0.06 + 0.08, 0.44);
+    rightCase.position.set(-0.72, 0.14, 0.42);
     rightCase.castShadow = true;
     rightCase.name = 'Valigia Laterale Alluminio Expedition (DX)';
     kitGroup.add(rightCase);
 
     // Black reinforced corner bumpers & luggage lid latches
-    const bumperGeo = new THREE.BoxGeometry(0.47, 0.04, 0.25);
+    const bumperGeo = new THREE.BoxGeometry(0.45, 0.04, 0.23);
     const leftBumper = new THREE.Mesh(bumperGeo, darkMat);
-    leftBumper.position.set(-0.76, 0.23 + 0.08, -0.44);
+    leftBumper.position.set(-0.72, 0.30, -0.42);
     kitGroup.add(leftBumper);
 
     const rightBumper = new THREE.Mesh(bumperGeo, darkMat);
-    rightBumper.position.set(-0.76, 0.23 + 0.08, 0.44);
+    rightBumper.position.set(-0.72, 0.30, 0.42);
     kitGroup.add(rightBumper);
 
     // Red rear reflectors on panniers
-    const reflectorGeo = new THREE.PlaneGeometry(0.04, 0.14);
+    const reflectorGeo = new THREE.PlaneGeometry(0.04, 0.12);
     const reflectorMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
 
     const leftReflector = new THREE.Mesh(reflectorGeo, reflectorMat);
-    leftReflector.position.set(-1.00, 0.06 + 0.08, -0.44);
+    leftReflector.position.set(-0.95, 0.14, -0.42);
     leftReflector.rotation.y = -Math.PI / 2;
     kitGroup.add(leftReflector);
 
     const rightReflector = new THREE.Mesh(reflectorGeo, reflectorMat);
-    rightReflector.position.set(-1.00, 0.06 + 0.08, 0.44);
+    rightReflector.position.set(-0.95, 0.14, 0.42);
     rightReflector.rotation.y = -Math.PI / 2;
     kitGroup.add(rightReflector);
 
-    // E. Adventure Handguards
-    const guardGeo = new THREE.BoxGeometry(0.08, 0.10, 0.16);
+    // D. Adventure Handguards
+    const guardGeo = new THREE.BoxGeometry(0.07, 0.09, 0.15);
     const leftGuard = new THREE.Mesh(guardGeo, darkMat);
-    leftGuard.position.set(0.68, 0.46 + 0.08, -0.32);
+    leftGuard.position.set(0.48, 0.68, -0.38);
     leftGuard.rotation.y = 0.25;
     leftGuard.name = 'Paramano Adventure Sinistro';
     kitGroup.add(leftGuard);
 
     const rightGuard = new THREE.Mesh(guardGeo, darkMat);
-    rightGuard.position.set(0.68, 0.46 + 0.08, 0.32);
+    rightGuard.position.set(0.48, 0.68, 0.38);
     rightGuard.rotation.y = -0.25;
     rightGuard.name = 'Paramano Adventure Destro';
     kitGroup.add(rightGuard);
