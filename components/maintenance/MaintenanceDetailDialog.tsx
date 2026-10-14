@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { MaintenanceLog } from '@/lib/supabase/types';
 import { formatKm } from '@/lib/reminders';
+import { formatCurrency } from '@/lib/expenses';
+import { maintenanceCostCents } from '@/lib/annual-costs';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +23,7 @@ import {
   X,
   Loader2,
   Camera,
+  Euro,
 } from 'lucide-react';
 
 interface MaintenanceDetailDialogProps {
@@ -39,6 +42,7 @@ export function MaintenanceDetailDialog({
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (!log) return null;
+  const costCents = maintenanceCostCents(log.cost);
 
   const handleDelete = async () => {
     if (!confirmDelete) {
@@ -73,7 +77,7 @@ export function MaintenanceDetailDialog({
           </DialogHeader>
 
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-1 gap-2.5 sm:gap-3 my-2 sm:my-3">
+          <div className={`grid grid-cols-1 ${costCents > 0 ? 'sm:grid-cols-2' : ''} gap-2.5 sm:gap-3 my-2 sm:my-3`}>
             <div className="bg-white/70 p-3 sm:p-3.5 rounded-xl border border-zinc-200">
               <span className="text-[10px] sm:text-xs text-zinc-600 uppercase font-medium flex items-center gap-1">
                 <Gauge className="w-3.5 h-3.5 text-orange-700" /> Orometro / Km
@@ -82,6 +86,12 @@ export function MaintenanceDetailDialog({
                 {formatKm(log.km_hours)}
               </span>
             </div>
+            {costCents > 0 && <div className="bg-white/70 p-3 sm:p-3.5 rounded-xl border border-zinc-200">
+              <span className="text-[10px] sm:text-xs text-zinc-600 uppercase font-medium flex items-center gap-1">
+                <Euro className="w-3.5 h-3.5 text-orange-700" /> Costo intervento
+              </span>
+              <span className="text-sm sm:text-lg font-mono font-bold text-zinc-800 mt-1 block">{formatCurrency(costCents)}</span>
+            </div>}
           </div>
 
           {/* Target Scadenza */}

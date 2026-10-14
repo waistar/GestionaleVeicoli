@@ -39,7 +39,7 @@ export default async function NuovoInterventoPage({ searchParams }: { searchPara
               Nuovo Intervento
             </h1>
             <p className="text-xs sm:text-sm text-zinc-600 mt-0.5">
-              Registra manutenzioni, controlli o adempimenti per {bike.name}
+              Registra lavori di meccanica, manutenzioni e relativi costi per {bike.name}
             </p>
           </div>
         </div>

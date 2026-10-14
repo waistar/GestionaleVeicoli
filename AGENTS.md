@@ -91,6 +91,7 @@ Non creare veicoli, interventi o scadenze di esempio durante le letture o la con
 
 ## Registro spese
 - `vehicle_expenses` è la fonte dei totali della pagina `/spese`; sommare centesimi interi, non importi decimali.
+- `maintenance_logs.cost` registra il costo del singolo intervento in euro. La scheda veicolo calcola il totale dell’anno sommando scadenze con importo, interventi e `vehicle_expenses`, mostrando le tre componenti; non duplicare automaticamente un intervento nel registro spese.
 - La migrazione `supabase/migrations/20261014_vehicle_expenses.sql` è allineata alla sezione 9 di `schema.sql`. Non aggiungere dati dimostrativi.
 - `bike_id` diventa nullo alla rimozione del veicolo; `vehicle_ref` e `vehicle_label` conservano il raggruppamento e lo storico. Non cancellare le spese a cascata.
 - `lib/expenses.ts` contiene validazione, filtri e aggregazione. `npm test` comprende i casi economici.

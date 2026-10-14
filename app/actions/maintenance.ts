@@ -5,6 +5,7 @@ import { Bike, MaintenanceLog, VehicleReminder } from '@/lib/supabase/types';
 import { revalidatePath } from 'next/cache';
 
 import { getActiveBike } from '@/app/actions/bikes';
+import { amountSchema } from '@/lib/expenses';
 
 export async function getMainData(preferredBikeId?: string): Promise<{
   bike: Bike | null; logs: MaintenanceLog[]; scheduled: VehicleReminder[]; isFallback: boolean; error?: string;
@@ -38,6 +39,8 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
     const description = (formData.get('description') as string) || '';
     const nextDueRaw = formData.get('next_due_km_hours') as string;
     const nextDue = nextDueRaw && nextDueRaw.trim() !== '' ? parseFloat(nextDueRaw) : null;
+    const costRaw = String(formData.get('cost') || '').trim();
+    const parsedCost = costRaw ? amountSchema.safeParse(costRaw) : null;
 
     if (!bikeId) {
       return { success: false, error: 'ID Moto non specificato.' };
@@ -50,6 +53,9 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
     }
     if (!description.trim()) {
       return { success: false, error: 'Descrizione dell\'intervento obbligatoria.' };
+    }
+    if (parsedCost && !parsedCost.success) {
+      return { success: false, error: parsedCost.error.issues[0].message };
     }
 
     let imageUrl: string | null = null;
@@ -94,6 +100,7 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
         km_hours: kmHours,
         category,
         description,
+        cost: parsedCost?.success ? parsedCost.data / 100 : 0,
         image_url: imageUrl,
         next_due_km_hours: nextDue,
       })
@@ -126,6 +133,7 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
     revalidatePath('/garage');
     revalidatePath('/interventi');
     revalidatePath('/promemoria');
+    revalidatePath(`/veicoli/${bikeId}`);
 
     return { success: true, id: newLog?.id };
   } catch (err: unknown) {
@@ -137,19 +145,22 @@ export async function createMaintenanceLog(formData: FormData): Promise<{
 export async function deleteMaintenanceLog(id: string): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = await createClient();
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('maintenance_logs')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select('id, bike_id')
+      .single();
 
-    if (error) {
-      return { success: false, error: error.message };
+    if (error || !data) {
+      return { success: false, error: error?.message || 'Intervento non trovato.' };
     }
 
     revalidatePath('/');
     revalidatePath('/garage');
     revalidatePath('/interventi');
     revalidatePath('/promemoria');
+    revalidatePath(`/veicoli/${data.bike_id}`);
     return { success: true };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);

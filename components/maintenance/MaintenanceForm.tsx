@@ -21,6 +21,7 @@ import {
   Tag,
   FileText,
   AlertCircle,
+  Euro,
 } from 'lucide-react';
 
 interface MaintenanceFormProps {
@@ -37,6 +38,7 @@ export function MaintenanceForm({ bike, initialCategory = 'Tagliando' }: Mainten
   const [category, setCategory] = useState<MaintenanceCategory>(initialCategory);
   const [description, setDescription] = useState('');
   const [nextDueKm, setNextDueKm] = useState('');
+  const [cost, setCost] = useState('');
 
   // Image upload state
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -92,6 +94,7 @@ export function MaintenanceForm({ bike, initialCategory = 'Tagliando' }: Mainten
       formData.append('km_hours', kmHours);
       formData.append('category', category);
       formData.append('description', description.trim());
+      formData.append('cost', cost.trim());
 
       if (nextDueKm && nextDueKm.trim() !== '') {
         formData.append('next_due_km_hours', nextDueKm.trim());
@@ -137,12 +140,12 @@ export function MaintenanceForm({ bike, initialCategory = 'Tagliando' }: Mainten
               <Tag className="w-3.5 h-3.5 text-orange-700" />
               Categoria Intervento *
             </label>
-<select aria-label="Categoria intervento" value={category} onChange={e => setCategory(e.target.value)} className="w-full min-h-11 rounded-xl border border-zinc-200 bg-white px-3 text-base">{[...new Set([category, ...catalogFor(vehicleType(bike)).map(c => c.label)])].map(cat => <option key={cat}>{cat}</option>)}</select>
+<select aria-label="Categoria intervento" value={category} onChange={e => setCategory(e.target.value)} className="w-full min-h-11 rounded-xl border border-zinc-200 bg-white px-3 text-base">{[...new Set([category, 'Meccanica', ...catalogFor(vehicleType(bike)).map(c => c.label)])].map(cat => <option key={cat}>{cat}</option>)}</select>
           </Card>
 
           {/* 2. Dati Base: Data e Chilometraggio */}
           <Card className="bg-zinc-50/90 border-zinc-200 p-4 sm:p-5 rounded-2xl space-y-3.5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Data */}
               <div>
                 <label className="text-xs font-semibold text-zinc-700 mb-1.5 flex items-center gap-1">
@@ -173,6 +176,21 @@ export function MaintenanceForm({ bike, initialCategory = 'Tagliando' }: Mainten
                   required
                   min="0"
                   step="any"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-zinc-700 mb-1.5 flex items-center gap-1">
+                  <Euro className="w-3.5 h-3.5 text-orange-700" />
+                  Costo (€)
+                </label>
+                <Input
+                  value={cost}
+                  onChange={(e) => setCost(e.target.value)}
+                  placeholder="es. 125,50"
+                  inputMode="decimal"
+                  maxLength={10}
+                  className="bg-white border-zinc-200 text-zinc-900 font-mono text-sm h-11"
                 />
               </div>
             </div>
@@ -300,6 +318,10 @@ export function MaintenanceForm({ bike, initialCategory = 'Tagliando' }: Mainten
               <div className="flex items-center justify-between py-1 border-b border-zinc-200/80">
                 <span className="text-zinc-600">Data / Km</span>
                 <span className="font-mono text-zinc-800">{date} • {kmHours || '0'} km</span>
+              </div>
+              <div className="flex items-center justify-between py-1 border-b border-zinc-200/80">
+                <span className="text-zinc-600">Costo</span>
+                <span className="font-mono text-zinc-800">{cost.trim() ? `${cost} €` : 'Non indicato'}</span>
               </div>
               <div className="flex items-center justify-between py-1">
                 <span className="text-zinc-600">Prossima scadenza</span>

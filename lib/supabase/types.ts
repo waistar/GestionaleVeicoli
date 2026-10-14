@@ -49,6 +49,7 @@ export interface MaintenanceLog {
   km_hours: number;
   category: MaintenanceCategory | string;
   description: string;
+  cost?: number | string | null;
   image_url: string | null;
   next_due_km_hours: number | null;
   created_at: string;

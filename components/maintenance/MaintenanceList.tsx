@@ -3,6 +3,8 @@
 import React, { useState, useMemo } from 'react';
 import { MaintenanceLog } from '@/lib/supabase/types';
 import { formatKm } from '@/lib/reminders';
+import { formatCurrency } from '@/lib/expenses';
+import { maintenanceCostCents } from '@/lib/annual-costs';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -35,6 +37,7 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
         !q ||
         log.description.toLowerCase().includes(q) ||
         log.category.toLowerCase().includes(q) ||
+        String(log.cost || '').includes(q) ||
         log.km_hours.toString().includes(q);
 
       return matchCategory && matchSearch;
@@ -164,6 +167,7 @@ export function MaintenanceList({ logs }: MaintenanceListProps) {
 
                   <div className="flex items-center gap-3 mt-2 text-[11px] sm:text-xs text-zinc-600 font-mono">
                     <span>{formatKm(log.km_hours)}</span>
+                    {maintenanceCostCents(log.cost) > 0 && <span className="font-semibold text-zinc-800">{formatCurrency(maintenanceCostCents(log.cost))}</span>}
                     {log.image_url && (
                       <span className="text-orange-700 flex items-center gap-0.5 text-[10px]">
                         • <ImageIcon className="w-3 h-3" /> Foto

@@ -7,6 +7,8 @@ import { calculateStats } from '@/lib/reminders';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { MaintenanceList } from '@/components/maintenance/MaintenanceList';
+import { maintenanceCostCents } from '@/lib/annual-costs';
+import { formatCurrency } from '@/lib/expenses';
 import { Wrench, Plus } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -16,6 +18,10 @@ export default async function InterventiPage() {
   const { bike, logs, scheduled, isFallback } = await getMainData();
   if (!bike) return <EmptyGarage databaseUnavailable={isFallback} />;
   const stats = calculateStats(bike, logs, scheduled);
+  const currentYear = new Date().getFullYear();
+  const annualInterventionCents = logs
+    .filter(log => log.date.startsWith(`${currentYear}-`))
+    .reduce((total, log) => total + maintenanceCostCents(log.cost), 0);
 
   return (
     <>
@@ -35,13 +41,16 @@ export default async function InterventiPage() {
             </p>
           </div>
 
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+          <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-right"><p className="text-[10px] uppercase text-zinc-500">Interventi {currentYear}</p><p className="text-sm font-bold font-mono text-zinc-900">{formatCurrency(annualInterventionCents)}</p></div>
           <Link
             href="/interventi/nuovo"
-            className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-orange-600/20 active:scale-95 transition-all shrink-0"
+            className="min-h-11 flex items-center gap-1.5 px-3.5 sm:px-4 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs sm:text-sm font-bold transition-colors shrink-0"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Nuovo Intervento</span>
           </Link>
+          </div>
         </div>
 
         <MaintenanceList logs={logs} />
