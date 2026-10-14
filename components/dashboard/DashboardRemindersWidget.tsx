@@ -6,7 +6,7 @@ import { VehicleViewer } from '@/components/garage/VehicleViewer';
 import { vehicleTypeLabel } from '@/lib/vehicle-catalog';
 export function DashboardRemindersWidget({ bike, reminders }: { bike: Bike; reminders: ReminderItem[] }) {
   return <div className="space-y-6">
-    <section className="rounded-2xl border border-zinc-200 bg-white p-5 space-y-3"><div className="flex justify-between gap-3"><h2 className="font-bold text-sm">Prossime scadenze</h2><Link href="/promemoria" className="text-orange-700 text-sm font-semibold">Tutte →</Link></div>
+    <section className="rounded-2xl border border-zinc-200 bg-white p-5 space-y-3"><div className="flex justify-between gap-3"><h2 className="font-bold text-sm">Prossime scadenze</h2><Link href={`/promemoria?vehicle=${bike.id}`} className="text-orange-700 text-sm font-semibold">Tutte →</Link></div>
       {!reminders.length && <p className="text-sm text-zinc-600">Pianifica bollo, assicurazione, revisione e manutenzioni nel catalogo.</p>}
       {reminders.slice(0,3).map(item => <div key={item.id} className="rounded-xl border border-zinc-200 p-3"><p className="text-sm font-semibold">{item.title || item.category}</p><p className="text-xs font-mono text-zinc-700 mt-1">{reminderTarget(item)}</p><p className={`text-xs mt-1 ${item.status === 'expired' ? 'text-rose-700' : item.status === 'warning' ? 'text-amber-700' : 'text-zinc-600'}`}>{reminderRemaining(item)}</p></div>)}
     </section>

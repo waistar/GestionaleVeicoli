@@ -3,7 +3,7 @@ import { VehicleIcon } from '@/components/garage/VehicleViewer'
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Bike } from '@/lib/supabase/types';
 import { formatKm } from '@/lib/reminders';
 import { setActiveBike } from '@/app/actions/bikes';
@@ -28,10 +28,11 @@ interface HeaderProps {
 
 export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const isHome = pathname === '/';
+  const isHome = pathname === '/' || pathname.startsWith('/veicoli/');
   const isInterventi = pathname === '/interventi';
   const isPromemoria = pathname === '/promemoria';
   const isGarage = pathname === '/garage';
@@ -50,7 +51,8 @@ export function Header({ bike, alertsCount = 0, allBikes }: HeaderProps) {
   const handleQuickSwitch = async (bikeId: string) => {
     setDropdownOpen(false);
     if (bikeId !== bike.id) {
-      await setActiveBike(bikeId);
+      const result = await setActiveBike(bikeId);
+      if (result.success && pathname.startsWith('/veicoli/')) router.push(`/veicoli/${bikeId}`);
     }
   };
 

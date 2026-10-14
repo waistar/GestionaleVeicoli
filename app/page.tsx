@@ -1,117 +1,81 @@
+import Link from 'next/link';
+import { getAllBikes } from '@/app/actions/bikes';
+import { createClient } from '@/lib/supabase/server';
+import { MaintenanceLog, VehicleReminder } from '@/lib/supabase/types';
+import { calculateReminders, formatKm, reminderRemaining, reminderTarget, sortReminders } from '@/lib/reminders';
+import { vehicleTypeLabel } from '@/lib/vehicle-catalog';
 import { EmptyGarage } from '@/components/garage/EmptyGarage';
 import { VehicleIcon } from '@/components/garage/VehicleViewer';
-import React from 'react';
-import Link from 'next/link';
-import { getMainData } from '@/app/actions/maintenance';
-import { getAllBikes } from '@/app/actions/bikes';
-import { getExpenses } from '@/app/actions/expenses';
-import { calculateStats } from '@/lib/reminders';
-import { summarizeExpenses } from '@/lib/expenses';
-import { Header } from '@/components/layout/Header';
+import { WorkspaceHeader } from '@/components/layout/WorkspaceHeader';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { StatCards } from '@/components/dashboard/StatCards';
-import { AlertBanner } from '@/components/dashboard/AlertBanner';
-import { DashboardRemindersWidget } from '@/components/dashboard/DashboardRemindersWidget';
-import { SupabaseSetupBanner } from '@/components/setup/SupabaseSetupBanner';
-import { Bell, Plus, ShieldCheck, Warehouse } from 'lucide-react';
+import { CalendarClock, ChevronRight, Plus, Warehouse } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DashboardPage() {
-  const [{ bikes }, mainData, expenseData] = await Promise.all([getAllBikes(), getMainData(), getExpenses()]);
-  const { bike, logs, scheduled, isFallback, error } = mainData;
-  if (!bike) return <EmptyGarage databaseUnavailable={isFallback} />;
-  const stats = calculateStats(bike, logs, scheduled);
-  const vehicleExpenses = expenseData.expenses.filter(expense => expense.vehicle_ref === bike.id);
-  let expenseTotalCents = 0;
-  let expensesUnavailable = Boolean(expenseData.error);
-  if (!expensesUnavailable) {
-    try { expenseTotalCents = summarizeExpenses(vehicleExpenses, bikes).total; }
-    catch { expensesUnavailable = true; }
+export default async function FleetDashboardPage() {
+  const fleet = await getAllBikes();
+  if (!fleet.bikes.length) return <EmptyGarage databaseUnavailable={fleet.isFallback} />;
+
+  let logs: MaintenanceLog[] = [];
+  let scheduled: VehicleReminder[] = [];
+  let error = fleet.error;
+  if (!fleet.isFallback) {
+    try {
+      const db = await createClient();
+      const [history, plans] = await Promise.all([
+        db.from('maintenance_logs').select('*'),
+        db.from('vehicle_reminders').select('*').order('created_at', { ascending: false }),
+      ]);
+      logs = history.data || [];
+      scheduled = plans.data || [];
+      error = history.error?.message || plans.error?.message;
+    } catch (loadError) {
+      error = loadError instanceof Error ? loadError.message : 'Impossibile caricare le scadenze.';
+    }
   }
 
-  return (
-    <>
-      <Header bike={bike} alertsCount={stats.alertsTotal} allBikes={bikes} />
+  const reminders = sortReminders(fleet.bikes.flatMap(vehicle => calculateReminders(vehicle, logs, scheduled)));
+  const expiredCount = reminders.filter(reminder => reminder.status === 'expired').length;
+  const warningCount = reminders.filter(reminder => reminder.status === 'warning').length;
+  const alertsCount = expiredCount + warningCount;
 
-      <main className="flex-1 max-w-md md:max-w-5xl lg:max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 md:pt-6 pb-24 md:pb-10 space-y-6">
-        <SupabaseSetupBanner isFallback={isFallback} />
-        {error && !isFallback && <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Alcuni dati dello scadenzario non sono disponibili. Verifica che il database sia aggiornato allo schema del progetto.</p>}
+  return <>
+    <WorkspaceHeader />
+    <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-24 space-y-7">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+        <div><p className="text-xs font-semibold uppercase tracking-wider text-orange-700">GestionaleVeicoli · panoramica generale</p><h1 className="mt-1 text-2xl sm:text-3xl font-bold text-zinc-900">Tutte le scadenze del parco veicoli</h1><p className="mt-2 text-sm text-zinc-600">Controlla le priorità generali, poi apri il singolo mezzo per gestirne dettagli, chilometri e spese.</p></div>
+        <div className="flex flex-wrap gap-2 shrink-0"><Link href="/garage" className="min-h-11 inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-800"><Warehouse className="w-4 h-4" />Gestisci veicoli</Link><Link href="/promemoria?new=1" className="min-h-11 inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 text-sm font-semibold text-white"><Plus className="w-4 h-4" />Nuova scadenza</Link></div>
+      </section>
 
-        {/* Desktop Welcome / Garage Hero Banner */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-zinc-50 via-zinc-50 to-zinc-50/60 border border-zinc-200 shadow-md">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
-              <VehicleIcon bike={bike} className="w-8 h-8" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-bold text-zinc-900">Scadenze del veicolo</h1>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-700 border border-orange-500/20 font-semibold font-mono">
-                  {bike.name} · {bike.model} {bike.year ? `• ${bike.year}` : ''}
-                </span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 font-medium flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3" /> Gestione interna
-                </span>
-              </div>
-              <p className="text-xs text-zinc-600 mt-1">
-                Assicurazione, bollo, revisione, documenti e manutenzioni del veicolo selezionato.
-              </p>
-            </div>
-          </div>
+      {error && <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Alcuni dati non sono disponibili. Verifica il collegamento al database e riprova.</p>}
 
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <Link
-              href="/garage"
-              className="px-3.5 py-2 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-700 border border-orange-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors"
-            >
-              <Warehouse className="w-3.5 h-3.5" />
-              Parco veicoli ({bikes.length})
-            </Link>
-            <Link
-              href="/promemoria"
-              className="px-3.5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-semibold flex items-center gap-1.5 transition-colors"
-            >
-              <Bell className="w-3.5 h-3.5 text-orange-700" />
-              Scadenzario ({stats.reminders.length})
-            </Link>
-            <Link
-              href={`/promemoria?new=1&vehicle=${bike.id}`}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold shadow-md shadow-orange-600/20 flex items-center gap-1.5 transition-all active:scale-95"
-            >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              Nuova scadenza
-            </Link>
-          </div>
+      <section aria-label="Riepilogo parco veicoli" className="grid grid-cols-3 gap-2.5 sm:gap-4">
+        {[
+          ['Veicoli', fleet.bikes.length, 'Mezzi registrati', 'text-zinc-900'],
+          ['Scadute', expiredCount, 'Da gestire subito', expiredCount ? 'text-rose-700' : 'text-zinc-900'],
+          ['In scadenza', warningCount, 'Entro il preavviso', warningCount ? 'text-amber-700' : 'text-zinc-900'],
+        ].map(([label, value, note, color]) => <article key={String(label)} className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-3 sm:p-5 shadow-sm"><p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-600 truncate">{label}</p><p className={`mt-2 text-2xl sm:text-3xl font-bold font-mono ${color}`}>{value}</p><p className="mt-1 text-[10px] sm:text-xs text-zinc-500">{note}</p></article>)}
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-end justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wider text-orange-700">Accesso rapido</p><h2 className="text-xl font-bold text-zinc-900">Veicoli</h2></div><Link href="/garage" className="text-sm font-semibold text-orange-700">Parco veicoli →</Link></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {fleet.bikes.map(vehicle => {
+            const vehicleReminders = reminders.filter(reminder => reminder.bikeId === vehicle.id);
+            const vehicleAlerts = vehicleReminders.filter(reminder => reminder.status !== 'ok').length;
+            return <Link key={vehicle.id} href={`/veicoli/${vehicle.id}`} className="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm hover:border-orange-300 hover:shadow-md transition-all">
+              <div className="flex items-start gap-4"><div className="w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0" style={{ backgroundColor: vehicle.primary_color || '#ea580c' }}><VehicleIcon bike={vehicle} className="w-6 h-6" /></div><div className="min-w-0 flex-1"><p className="text-xs text-zinc-500">{vehicleTypeLabel(vehicle)}{vehicle.plate ? ` · ${vehicle.plate}` : ''}</p><h3 className="font-bold text-zinc-900 truncate">{vehicle.name} {vehicle.model}</h3><p className="mt-1 text-xs text-zinc-600">{formatKm(vehicle.current_km_hours)}</p></div><ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-orange-700 transition-colors" /></div>
+              <div className="mt-4 grid grid-cols-2 gap-2 border-t border-zinc-100 pt-3 text-xs"><div><p className="text-zinc-500">Scadenze</p><p className="font-semibold text-zinc-900">{vehicleReminders.length}</p></div><div><p className="text-zinc-500">Da gestire</p><p className={`font-semibold ${vehicleAlerts ? 'text-amber-700' : 'text-emerald-700'}`}>{vehicleAlerts}</p></div></div>
+            </Link>;
+          })}
         </div>
+      </section>
 
-        {/* Stat Cards (3 responsive cards) */}
-        <StatCards
-          bike={bike}
-          alertsCount={stats.alertsTotal}
-          expenseTotalCents={expenseTotalCents}
-          expenseCount={vehicleExpenses.length}
-          expensesUnavailable={expensesUnavailable}
-        />
-
-        {/* 2-Column Responsive Grid on Desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Main Column */}
-          <div className="lg:col-span-7 space-y-6">
-            <AlertBanner reminders={stats.reminders} />
-          </div>
-
-          {/* Sidebar Column (Promemoria widget & Scheda veicolo) */}
-          <div className="lg:col-span-5">
-            <DashboardRemindersWidget
-              bike={bike}
-              reminders={stats.reminders}
-            />
-          </div>
-        </div>
-      </main>
-
-      <BottomNav alertsCount={stats.alertsTotal} />
-    </>
-  );
+      <section className="space-y-4">
+        <div className="flex items-end justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wider text-orange-700">Scadenzario generale</p><h2 className="text-xl font-bold text-zinc-900">Tutte le scadenze</h2></div><Link href="/promemoria" className="text-sm font-semibold text-orange-700">Gestisci catalogo →</Link></div>
+        {!reminders.length ? <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-8 text-center"><CalendarClock className="w-8 h-8 text-zinc-400 mx-auto" /><p className="mt-3 font-semibold text-zinc-900">Nessuna scadenza configurata</p><p className="mt-1 text-sm text-zinc-600">Apri un veicolo o usa lo scadenzario per aggiungere la prima data.</p></div> : <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{reminders.map(reminder => <Link key={reminder.id} href={`/veicoli/${reminder.bikeId}`} className={`rounded-2xl border bg-white p-5 space-y-3 hover:shadow-md transition-shadow ${reminder.status === 'expired' ? 'border-rose-300' : reminder.status === 'warning' ? 'border-amber-300' : 'border-zinc-200'}`}><div className="flex items-start justify-between gap-3"><div><p className="text-xs text-zinc-500">{reminder.bikeName}</p><h3 className="font-bold text-zinc-900">{reminder.title || reminder.category}</h3></div><span className={`rounded-full px-2 py-1 text-xs font-semibold shrink-0 ${reminder.status === 'expired' ? 'bg-rose-50 text-rose-700' : reminder.status === 'warning' ? 'bg-amber-50 text-amber-800' : 'bg-emerald-50 text-emerald-700'}`}>{reminder.status === 'expired' ? 'Scaduta' : reminder.status === 'warning' ? 'In scadenza' : 'Programmata'}</span></div><p className="text-xs text-zinc-500">{reminder.category}</p><p className="font-mono text-sm font-semibold text-zinc-900">{reminderTarget(reminder)}</p><p className="text-sm text-zinc-700">{reminderRemaining(reminder)}</p></Link>)}</div>}
+      </section>
+    </main>
+    <BottomNav alertsCount={alertsCount} />
+  </>;
 }
